@@ -4,10 +4,9 @@
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
-
+// https://wpilib.screenstepslive.com/s/currentCS/m/java/l/599704-driving-a-robot-using-mecanum-drive
 #include "Robot.h"
 
-#include <iostream>
 
 
 #include <frc/smartdashboard/SmartDashboard.h>
@@ -45,7 +44,7 @@ void Robot::AutonomousInit() {
   m_autoSelected = m_chooser.GetSelected();
   // m_autoSelected = SmartDashboard::GetString(
   //     "Auto Selector", kAutoNameDefault);
-  std::cout << "Auto selected: " << m_autoSelected << std::endl;
+  //std::cout << "Auto selected: " << m_autoSelected << std::endl;
 
   if (m_autoSelected == kAutoNameCustom) {
     // Custom Auto goes here
@@ -64,7 +63,9 @@ void Robot::AutonomousPeriodic() {
 
 void Robot::TeleopInit() {}
 
-void Robot::TeleopPeriodic() {}
+void Robot::TeleopPeriodic() {
+  m_drive.DriveCartesian(m_driveStick.GetX(), m_driveStick.GetY(), m_driveStick.GetZ());
+}
 
 void Robot::TestPeriodic() {}
 
