@@ -75,7 +75,7 @@ class Robot : public frc::TimedRobot {
     }
 
  private:
-	frc::VictorSP m_frontLeft{7};
+	frc::VictorSP m_frontLeft{0};
   frc::VictorSP m_frontRight{1};		
 	frc::VictorSP m_rearLeft{2}; 
 	frc::VictorSP m_rearRight{3};
