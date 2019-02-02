@@ -10,5 +10,7 @@
     "bin/": true,
     ".classpath": true,
     ".project": true
-  }
+  },
+  "C_Cpp.intelliSenseEngineFallback": "Disabled",
+  "C_Cpp.errorSquiggles": "Enabled"
 }

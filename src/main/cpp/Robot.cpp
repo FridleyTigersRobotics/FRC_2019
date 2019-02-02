@@ -65,6 +65,7 @@ void Robot::TeleopInit() {}
 
 void Robot::TeleopPeriodic() {
   m_drive.DriveCartesian(m_driveStick.GetX(), m_driveStick.GetY(), m_driveStick.GetZ());
+  Tele_Lift(XboxController.GetAButton, XboxController.GetXButton, XboxController.GetAButton, XboxController.GetAButton);
 }
 
 void Robot::TestPeriodic() {}
