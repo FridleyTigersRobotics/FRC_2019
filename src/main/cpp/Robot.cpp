@@ -5,7 +5,7 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 // https://wpilib.screenstepslive.com/s/currentCS/m/java/l/599704-driving-a-robot-using-mecanum-drive
-#include "Robot.h"
+#include <Robot.h>
 
 
 
@@ -65,7 +65,8 @@ void Robot::TeleopInit() {}
 
 void Robot::TeleopPeriodic() {
   m_drive.DriveCartesian(m_driveStick.GetX(), m_driveStick.GetY(), m_driveStick.GetZ());
-  Tele_Lift(XboxController.GetAButton, XboxController.GetXButton, XboxController.GetAButton, XboxController.GetAButton);
+  Tele_Lift();
+  Ball_intake();
 }
 
 void Robot::TestPeriodic() {}
