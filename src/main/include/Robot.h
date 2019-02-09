@@ -93,8 +93,6 @@ class Robot : public frc::TimedRobot {
             wristSolenoid.Set(false);
         }
         
-
-
     }
   void Ball_intake( void )
     {
