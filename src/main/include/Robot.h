@@ -70,8 +70,6 @@ double deadband(
 }
 
 
-
-
 class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
@@ -81,7 +79,10 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
-  void Hatch_wrist( void )
+  void UpdateDriveSystem ();
+  void UpdateBallintake();
+  void UpdateSolenoid ();
+    void Hatch_wrist( void )
     {
         bool const yButtonPressed = XboxController.GetYButton();
         if ( yButtonPressed)
@@ -150,6 +151,126 @@ class Robot : public frc::TimedRobot {
         {
             m_rearLift = 0.0;
         }
+
+
+    
+void UpdateDriveSystem( void ) {
+        bool const debugDirectionChange = false;
+
+		typedef enum {
+		    waitForButtonPress,
+		    waitForHoldTime,
+		    waitForRelease,
+            waitForReleaseTime,
+		} debounceStateType;
+
+		static debounceStateType debounceState = waitForButtonPress;
+		static frc::Timer timer;
+		bool buttonValue = XboxController.GetXButton();
+		double holdTime = 0.03;
+		double releaseTime = 0.25;
+		static double driveMultiplier = 1.0;
+
+        if ( debugDirectionChange )
+        {
+            char outputString[50];
+            sprintf( outputString, "debounce: %10d, %10d, %10g\n", debounceState, buttonValue, timer.Get());
+            std::cout << outputString;
+            std::cout << std::flush;
+        }
+
+		switch ( debounceState )
+		{
+            case waitForButtonPress:
+            {
+                if ( buttonValue )
+                {
+                    timer.Reset();
+                    timer.Start();
+                    debounceState = waitForHoldTime;
+                }
+                break;
+            }
+
+            case waitForHoldTime:
+            {
+                if ( buttonValue )
+                {
+                    if ( timer.Get() > holdTime )
+                    {
+                        driveMultiplier *= -1.0;
+                        debounceState = waitForRelease;
+                    }
+                }
+                else
+                {
+                    debounceState = waitForButtonPress;
+                    timer.Stop();
+                }
+                break;
+            }
+
+            case waitForRelease:
+            {
+                if ( buttonValue == false )
+                {
+                    timer.Reset();
+                    timer.Start();
+                    debounceState = waitForReleaseTime;
+                }
+                break;
+            }
+
+            case waitForReleaseTime:
+            {
+                if ( buttonValue == false )
+                {
+                    if ( timer.Get() > releaseTime )
+                    {
+                        debounceState = waitForButtonPress;
+                    }
+                }
+                else
+                {
+                    debounceState = waitForRelease;
+                    timer.Stop();
+                }
+                break;
+            }
+
+            default:
+            {
+                debounceState = waitForButtonPress;
+                break;
+            }
+
+		}
+
+
+	void UpdateBallIntake( void ) {
+		//ball intake
+		bool xabutton = XboxController.GetAButton();
+		bool xbbutton = XboxController.GetBButton();
+
+		if( xabutton ) {
+			mBallIntake.Set( -1 );
+		}
+		else if( xbbutton ) {
+			mBallIntake.Set( 1 );
+		}
+		else {
+ 			mBallIntake.Set( 0 );
+		}
+	}
+
+  void UpdateSolenoid (); {
+
+    
+  }
+
+}
+
+
     };
 
  private:
