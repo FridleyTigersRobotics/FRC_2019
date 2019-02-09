@@ -72,7 +72,8 @@ void Robot::TeleopPeriodic() {
 
   UpdateDriveSystem();
   UpdateBallintake();
-  
+  UpdateSolenoid ();
+
 
 
 void UpdateDriveSystem( void ) {
@@ -183,6 +184,12 @@ void UpdateDriveSystem( void ) {
  			mBallIntake.Set( 0 );
 		}
 	}
+
+  void UpdateSolenoid (); {
+
+    
+  }
+
 }
 
 void Robot::TestPeriodic() {}
