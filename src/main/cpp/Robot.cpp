@@ -72,11 +72,14 @@ void Robot::TeleopPeriodic() {
   UpdateDriveSystem();
   UpdateBallintake();
   UpdateSolenoid ();
+};
 
 
 
+void Robot::TestPeriodic() 
+  {
 
-void Robot::TestPeriodic() {}
+  };
 
 
 #ifndef RUNNING_FRC_TESTS

@@ -150,7 +150,7 @@ class Robot : public frc::TimedRobot {
         else
         {
             m_rearLift = 0.0;
-        }
+        };
 
 
     
@@ -244,7 +244,7 @@ void UpdateDriveSystem( void ) {
                 break;
             }
 
-		}
+		};
 
 
 	void UpdateBallIntake( void ) {
@@ -261,7 +261,7 @@ void UpdateDriveSystem( void ) {
 		else {
  			mBallIntake.Set( 0 );
 		}
-	}
+	};
 
   void UpdateSolenoid (); {
 
