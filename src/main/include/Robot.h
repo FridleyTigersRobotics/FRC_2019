@@ -81,6 +81,21 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() override;
   void TeleopPeriodic() override;
   void TestPeriodic() override;
+  void Hatch_wrist( void )
+    {
+        bool const yButtonPressed = XboxController.GetYButton();
+        if ( yButtonPressed)
+        {
+            wristSolenoid.Set(true);
+        }
+        else
+        {
+            wristSolenoid.Set(false);
+        }
+        
+
+
+    }
   void Ball_intake( void )
     {
         frc::XboxController::JoystickHand const inHand  = frc::XboxController::JoystickHand::kRightHand;
