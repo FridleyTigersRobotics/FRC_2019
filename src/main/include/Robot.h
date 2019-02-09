@@ -147,6 +147,10 @@ class Robot : public frc::TimedRobot {
     frc::VictorSP m_frontLift{4};
 	frc::VictorSP m_rearLift{5};
     frc::VictorSP m_ballIntake{6};
+    frc::Solenoid wristSolenoid {0};
+    frc::Solenoid pieceSolenoid {1};
+    frc::DoubleSolenoid leftarmDouble {0, 1};
+    frc::DoubleSolenoid rightarmDouble {2, 3};
     frc::MecanumDrive m_drive{m_frontLeft, m_rearLeft, m_frontRight, m_rearRight};
 	frc::Joystick m_driveStick{1};
     frc::ADXRS450_Gyro gyro{ frc::SPI::Port::kOnboardCS0  }; // Right turn -> positive angle
