@@ -12,7 +12,6 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 
 
-
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
@@ -66,10 +65,9 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {}
 
 void Robot::TeleopPeriodic() {
-  m_drive.DriveCartesian(m_driveStick.GetX(), m_driveStick.GetY(), m_driveStick.GetZ());
   Tele_Lift();
-  Ball_intake();
-  UpdateDriveSystem();
+  //Ball_intake();
+  //UpdateDriveSystem();
 }
 
 
@@ -83,7 +81,7 @@ void Robot::TestPeriodic()
 void Robot::Hatch_wrist( void )
 {
     bool const yButtonPressed = XboxController.GetYButton();
-    if ( yButtonPressed)
+    if ( yButtonPressed )
     {
         wristSolenoid.Set(true);
     }
@@ -120,132 +118,41 @@ void Robot::Tele_Lift(  void  )
       bool const xButtonPressed = XboxController.GetXButton();
       bool const aButtonPressed = XboxController.GetAButton();
 
-      //bool const notAtTopLimit = winchLimiterTop.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
-      //bool const notAtBotLimit = winchLimiterBot.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
+      frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
 
-      double m_frontLift = 0.0;
+      std::cout << m_rearLeft.Get() << " "
+      << m_rearRight.Get() << " "
+      << m_frontLeft.Get() << " "
+      << m_frontRight.Get()	<< " " 
+      << "\n" << std::flush;
 
-      double m_rearLift = 0.0;
+    if ( aButtonPressed )
+    {
+      solenoidValue = frc::DoubleSolenoid::Value::kForward;
+    }
+    else if ( bButtonPressed )
+    {
+      solenoidValue = frc::DoubleSolenoid::Value::kReverse;
+    }
 
-      if ( xButtonPressed )
-      {
-          m_frontLift = 1.0;
-      }
-      else if ( aButtonPressed )
-      {
-          m_frontLift = -1.0;
-      }
-      else
-      {
-          m_frontLift = 0.0;
-      }
-
-      if ( yButtonPressed )
-      {
-          m_rearLift = 1.0;
-      }
-      else if ( bButtonPressed )
-      {
-          m_rearLift = -1.0;
-      }
-      else
-      {
-          m_rearLift = 0.0;
-      };
+    leftarmDouble.Set(  solenoidValue );
+    rightarmDouble.Set( solenoidValue );
   }
 
  
 void Robot::UpdateDriveSystem( void ) {
-        bool const debugDirectionChange = false;
+  frc::XboxController::JoystickHand const driveStickHand = frc::XboxController::JoystickHand::kLeftHand;
+  frc::XboxController::JoystickHand const turnStickHand = frc::XboxController::JoystickHand::kRightHand;
+  
+  double const DriveHandX = XboxController.GetX( driveStickHand );
+  double const DriveHandY = XboxController.GetX( driveStickHand );
+  double const TurnHandX  = XboxController.GetX( turnStickHand );
+  double const deadbandSize = 0.2;
+  double const xSpeed    = deadband( DriveHandX, deadbandSize );
+  double const ySpeed    = deadband( DriveHandY, deadbandSize );
+  double const turnSpeed = deadband( TurnHandX,  deadbandSize );
 
-		typedef enum {
-		    waitForButtonPress,
-		    waitForHoldTime,
-		    waitForRelease,
-            waitForReleaseTime,
-		} debounceStateType;
-
-		static debounceStateType debounceState = waitForButtonPress;
-		static frc::Timer timer;
-		bool buttonValue = XboxController.GetXButton();
-		double holdTime = 0.03;
-		double releaseTime = 0.25;
-		static double driveMultiplier = 1.0;
-
-        if ( debugDirectionChange )
-        {
-            char outputString[50];
-            sprintf( outputString, "debounce: %10d, %10d, %10g\n", debounceState, buttonValue, timer.Get());
-            std::cout << outputString;
-            std::cout << std::flush;
-        }
-
-		switch ( debounceState )
-		{
-            case waitForButtonPress:
-            {
-                if ( buttonValue )
-                {
-                    timer.Reset();
-                    timer.Start();
-                    debounceState = waitForHoldTime;
-                }
-                break;
-            }
-
-            case waitForHoldTime:
-            {
-                if ( buttonValue )
-                {
-                    if ( timer.Get() > holdTime )
-                    {
-                        driveMultiplier *= -1.0;
-                        debounceState = waitForRelease;
-                    }
-                }
-                else
-                {
-                    debounceState = waitForButtonPress;
-                    timer.Stop();
-                }
-                break;
-            }
-
-            case waitForRelease:
-            {
-                if ( buttonValue == false )
-                {
-                    timer.Reset();
-                    timer.Start();
-                    debounceState = waitForReleaseTime;
-                }
-                break;
-            }
-
-            case waitForReleaseTime:
-            {
-                if ( buttonValue == false )
-                {
-                    if ( timer.Get() > releaseTime )
-                    {
-                        debounceState = waitForButtonPress;
-                    }
-                }
-                else
-                {
-                    debounceState = waitForRelease;
-                    timer.Stop();
-                }
-                break;
-            }
-
-            default:
-            {
-                debounceState = waitForButtonPress;
-                break;
-            }
-
-		}
+  m_drive.DriveCartesian( xSpeed, ySpeed, turnSpeed );
 }
 
 #ifndef RUNNING_FRC_TESTS

@@ -46,25 +46,26 @@ class Robot : public frc::TimedRobot {
 
  private:
     // Motors
-    frc::VictorSP m_frontLeft{0};
-    frc::VictorSP m_frontRight{1};		
-	frc::VictorSP m_rearLeft{2}; 
-	frc::VictorSP m_rearRight{3};
+   	frc::VictorSP m_rearLeft{0}; 
+	frc::VictorSP m_rearRight{1}; 
+    frc::VictorSP m_frontLeft{2};
+    frc::VictorSP m_frontRight{3};		
     frc::VictorSP m_frontLift{4};
 	frc::VictorSP m_rearLift{5};
     frc::VictorSP m_ballIntake{6};
     // Solenoids
-    frc::Solenoid wristSolenoid {0};
-    frc::Solenoid pieceSolenoid {1};
-    frc::DoubleSolenoid leftarmDouble {0, 1};
-    frc::DoubleSolenoid rightarmDouble {2, 3};
+    frc::Solenoid wristSolenoid {1, 0};
+    frc::Solenoid pieceSolenoid {1, 1};
+    frc::DoubleSolenoid leftarmDouble {2, 0, 1};
+    frc::DoubleSolenoid rightarmDouble {2, 2, 3};
+
     // Mechanum Drive
     frc::MecanumDrive m_drive{m_frontLeft, m_rearLeft, m_frontRight, m_rearRight};
     // Game Controllers
 	frc::Joystick m_driveStick{1};
     frc::XboxController XboxController{0};
     // Sensors
-    frc::ADXRS450_Gyro gyro{ frc::SPI::Port::kOnboardCS0  }; // Right turn -> positive angle
+    //frc::ADXRS450_Gyro gyro{ frc::SPI::Port::kOnboardCS0  }; // Right turn -> positive angle
     // Auto
     frc::SendableChooser<std::string> m_chooser;
     const std::string kAutoNameDefault = "Default";
