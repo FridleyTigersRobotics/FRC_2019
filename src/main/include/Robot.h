@@ -6,21 +6,20 @@
 /*----------------------------------------------------------------------------*/
 
 #pragma once
-
-#include <frc/WPILib.h>
+// Basic
 #include <math.h>
-#include <frc/IterativeRobot.h>
-#include <frc/SmartDashboard/SendableChooser.h>
-#include <frc/SmartDashboard/SmartDashboard.h>
-
+#include <stdio.h>
 #include <frc/Joystick.h>
 #include <frc/Timer.h>
 #include <iostream>
 
-//Robot specific includes
+//Libraries
+#include <frc/WPILib.h>
+#include <frc/IterativeRobot.h>
+#include <frc/SmartDashboard/SendableChooser.h>
+#include <frc/SmartDashboard/SmartDashboard.h>
 #include <frc/ADXRS450_Gyro.h>
 #include <frc/TimedRobot.h>
-#include <frc/smartdashboard/SendableChooser.h>
 
 
 // ***************************************************************************
@@ -97,6 +96,7 @@ class Robot : public frc::TimedRobot {
     }
   void Ball_intake( void )
     {
+
         frc::XboxController::JoystickHand const inHand  = frc::XboxController::JoystickHand::kRightHand;
         frc::XboxController::JoystickHand const outHand = frc::XboxController::JoystickHand::kLeftHand;
 
@@ -153,8 +153,8 @@ class Robot : public frc::TimedRobot {
         };
 
 
-    
-void UpdateDriveSystem( void ) {
+    /*    
+void UpdateDriveSystem( void ); {
         bool const debugDirectionChange = false;
 
 		typedef enum {
@@ -245,28 +245,8 @@ void UpdateDriveSystem( void ) {
             }
 
 		};
+        */
 
-
-	void UpdateBallIntake( void ) {
-		//ball intake
-		bool xabutton = XboxController.GetAButton();
-		bool xbbutton = XboxController.GetBButton();
-
-		if( xabutton ) {
-			mBallIntake.Set( -1 );
-		}
-		else if( xbbutton ) {
-			mBallIntake.Set( 1 );
-		}
-		else {
- 			mBallIntake.Set( 0 );
-		}
-	};
-
-  void UpdateSolenoid (); {
-
-    
-  }
 
 }
 
@@ -274,6 +254,7 @@ void UpdateDriveSystem( void ) {
     };
 
  private:
+    // Motors
     frc::VictorSP m_frontLeft{0};
     frc::VictorSP m_frontRight{1};		
 	frc::VictorSP m_rearLeft{2}; 
@@ -281,14 +262,19 @@ void UpdateDriveSystem( void ) {
     frc::VictorSP m_frontLift{4};
 	frc::VictorSP m_rearLift{5};
     frc::VictorSP m_ballIntake{6};
+    // Solenoids
     frc::Solenoid wristSolenoid {0};
     frc::Solenoid pieceSolenoid {1};
     frc::DoubleSolenoid leftarmDouble {0, 1};
     frc::DoubleSolenoid rightarmDouble {2, 3};
+    // Mechanum Drive
     frc::MecanumDrive m_drive{m_frontLeft, m_rearLeft, m_frontRight, m_rearRight};
+    // Game Controllers
 	frc::Joystick m_driveStick{1};
-    frc::ADXRS450_Gyro gyro{ frc::SPI::Port::kOnboardCS0  }; // Right turn -> positive angle
     frc::XboxController XboxController{0};
+    // Sensors
+    frc::ADXRS450_Gyro gyro{ frc::SPI::Port::kOnboardCS0  }; // Right turn -> positive angle
+    // Auto
     frc::SendableChooser<std::string> m_chooser;
     const std::string kAutoNameDefault = "Default";
     const std::string kAutoNameCustom = "My Auto";

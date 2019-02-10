@@ -70,8 +70,6 @@ void Robot::TeleopPeriodic() {
   Tele_Lift();
   Ball_intake();
   UpdateDriveSystem();
-  UpdateBallintake();
-  UpdateSolenoid ();
 };
 
 
@@ -82,6 +80,4 @@ void Robot::TestPeriodic()
   };
 
 
-#ifndef RUNNING_FRC_TESTS
-int main() { return frc::StartRobot<Robot>(); }
-#endif
+
