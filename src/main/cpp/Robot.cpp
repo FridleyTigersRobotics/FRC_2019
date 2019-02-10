@@ -6,7 +6,7 @@
 /*----------------------------------------------------------------------------*/
 // https://wpilib.screenstepslive.com/s/currentCS/m/java/l/599704-driving-a-robot-using-mecanum-drive
 #include <Robot.h>
-
+#include <iostream>
 // test
 
 #include <frc/smartdashboard/SmartDashboard.h>
@@ -70,14 +70,234 @@ void Robot::TeleopPeriodic() {
   Tele_Lift();
   Ball_intake();
   UpdateDriveSystem();
-};
+}
 
 
 
 void Robot::TestPeriodic() 
   {
 
-  };
+  }
 
 
+void Robot::Hatch_wrist( void )
+{
+    bool const yButtonPressed = XboxController.GetYButton();
+    if ( yButtonPressed)
+    {
+        wristSolenoid.Set(true);
+    }
+    else
+    {
+        wristSolenoid.Set(false);
+    }
+    
+}
+
+void Robot::Ball_intake( void )
+{
+    frc::XboxController::JoystickHand const inHand  = frc::XboxController::JoystickHand::kRightHand;
+    frc::XboxController::JoystickHand const outHand = frc::XboxController::JoystickHand::kLeftHand;
+
+    // Retrieve the stick Y position
+    double const inTriggerPosition  = XboxController.GetTriggerAxis( inHand  );
+    double const outTriggerPosition = XboxController.GetTriggerAxis( outHand );
+
+    // Apply deadband
+    double const deadbandEnd       = 0.22;
+    double const inTriggerPositionWithDeadband  = deadband( inTriggerPosition, deadbandEnd );
+    double const outTriggerPositionWithDeadband = deadband( outTriggerPosition, deadbandEnd );
+
+    // Calculate the motor speeds for the specified input
+    double const m_ballIntake  = inTriggerPositionWithDeadband - outTriggerPositionWithDeadband;
+}
+
+
+void Robot::Tele_Lift(  void  )
+  {
+      bool const yButtonPressed = XboxController.GetYButton();
+      bool const bButtonPressed = XboxController.GetBButton();
+      bool const xButtonPressed = XboxController.GetXButton();
+      bool const aButtonPressed = XboxController.GetAButton();
+
+      //bool const notAtTopLimit = winchLimiterTop.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
+      //bool const notAtBotLimit = winchLimiterBot.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
+
+      double m_frontLift = 0.0;
+
+      double m_rearLift = 0.0;
+
+      if ( xButtonPressed )
+      {
+          m_frontLift = 1.0;
+      }
+      else if ( aButtonPressed )
+      {
+          m_frontLift = -1.0;
+      }
+      else
+      {
+          m_frontLift = 0.0;
+      }
+
+      if ( yButtonPressed )
+      {
+          m_rearLift = 1.0;
+      }
+      else if ( bButtonPressed )
+      {
+          m_rearLift = -1.0;
+      }
+      else
+      {
+          m_rearLift = 0.0;
+      };
+  }
+
+ 
+void Robot::UpdateDriveSystem( void ) {
+        bool const debugDirectionChange = false;
+
+		typedef enum {
+		    waitForButtonPress,
+		    waitForHoldTime,
+		    waitForRelease,
+            waitForReleaseTime,
+		} debounceStateType;
+
+		static debounceStateType debounceState = waitForButtonPress;
+		static frc::Timer timer;
+		bool buttonValue = XboxController.GetXButton();
+		double holdTime = 0.03;
+		double releaseTime = 0.25;
+		static double driveMultiplier = 1.0;
+
+        if ( debugDirectionChange )
+        {
+            char outputString[50];
+            sprintf( outputString, "debounce: %10d, %10d, %10g\n", debounceState, buttonValue, timer.Get());
+            std::cout << outputString;
+            std::cout << std::flush;
+        }
+
+		switch ( debounceState )
+		{
+            case waitForButtonPress:
+            {
+                if ( buttonValue )
+                {
+                    timer.Reset();
+                    timer.Start();
+                    debounceState = waitForHoldTime;
+                }
+                break;
+            }
+
+            case waitForHoldTime:
+            {
+                if ( buttonValue )
+                {
+                    if ( timer.Get() > holdTime )
+                    {
+                        driveMultiplier *= -1.0;
+                        debounceState = waitForRelease;
+                    }
+                }
+                else
+                {
+                    debounceState = waitForButtonPress;
+                    timer.Stop();
+                }
+                break;
+            }
+
+            case waitForRelease:
+            {
+                if ( buttonValue == false )
+                {
+                    timer.Reset();
+                    timer.Start();
+                    debounceState = waitForReleaseTime;
+                }
+                break;
+            }
+
+            case waitForReleaseTime:
+            {
+                if ( buttonValue == false )
+                {
+                    if ( timer.Get() > releaseTime )
+                    {
+                        debounceState = waitForButtonPress;
+                    }
+                }
+                else
+                {
+                    debounceState = waitForRelease;
+                    timer.Stop();
+                }
+                break;
+            }
+
+            default:
+            {
+                debounceState = waitForButtonPress;
+                break;
+            }
+
+		}
+}
+
+#ifndef RUNNING_FRC_TESTS
+int main() { return frc::StartRobot<Robot>(); }
+#endif
+
+
+
+
+// ***************************************************************************
+//   Function:    deadband
+//
+//   Description: Applies a deadband to the input value.
+//                (output) will be zero when (-zone) <= (value) <= (+zone)
+//                (output) will be one at (value) == 1
+//
+//                         output        . (1,1)
+//                            |         /
+//                            |        /
+//                            |       /
+//                    -zone   |      /
+//             ---------+-----+-----+--------- value
+//                     /      |   +zone
+//                    /       |
+//                   /        |
+//                  /         |
+//                 . (-1,-1)
+//
+// ***************************************************************************
+double deadband(
+    double value,
+    double zone
+)
+{
+    double output;
+    if ( fabs( value ) < zone )
+    {
+        output = 0.0;
+    }
+    else
+    {
+        // After the deadband, start with value = 0
+        if( value < 0 )
+        {
+            output = ( value + zone ) / ( 1.0 - zone );
+        }
+        else
+        {
+            output = ( value - zone ) / ( 1.0 - zone );
+        }
+    }
+
+    return output;
+}
 
