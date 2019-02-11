@@ -42,6 +42,7 @@ class Robot : public frc::TimedRobot {
   void Hatch_wrist( void );
   void Ball_intake( void );
   void Tele_Lift(  void  );
+  void Tele_FourBar(  void  );
 
 
  private:
@@ -49,10 +50,10 @@ class Robot : public frc::TimedRobot {
    	frc::VictorSP m_rearLeft{0}; 
 	frc::VictorSP m_rearRight{1}; 
     frc::VictorSP m_frontLeft{2};
-    frc::VictorSP m_frontRight{3};		
-    frc::VictorSP m_frontLift{4};
-	frc::VictorSP m_rearLift{5};
-    frc::VictorSP m_ballIntake{6};
+    frc::VictorSP m_frontRight{3};	
+    //frc::VictorSP m_ballIntake{4}; 4?
+    frc::VictorSP m_frontLift{5};
+	frc::VictorSP m_rearLift{6};
     // Solenoids
     frc::Solenoid wristSolenoid {1, 0};
     frc::Solenoid pieceSolenoid {1, 1};
@@ -66,6 +67,7 @@ class Robot : public frc::TimedRobot {
     frc::XboxController XboxController{0};
     // Sensors
     //frc::ADXRS450_Gyro gyro{ frc::SPI::Port::kOnboardCS0  }; // Right turn -> positive angle
+    frc::AnalogInput FourBarPot{0};
     // Auto
     frc::SendableChooser<std::string> m_chooser;
     const std::string kAutoNameDefault = "Default";

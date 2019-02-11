@@ -65,9 +65,11 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {}
 
 void Robot::TeleopPeriodic() {
-  Tele_Lift();
+  // Enable these after testing them.
+  //Tele_Lift();
+  Tele_FourBar();
   //Ball_intake();
-  //UpdateDriveSystem();
+  UpdateDriveSystem();
 }
 
 
@@ -113,18 +115,84 @@ void Robot::Ball_intake( void )
 
 void Robot::Tele_Lift(  void  )
   {
-      bool const yButtonPressed = XboxController.GetYButton();
+	    bool const yButtonPressed = XboxController.GetYButton();
       bool const bButtonPressed = XboxController.GetBButton();
       bool const xButtonPressed = XboxController.GetXButton();
       bool const aButtonPressed = XboxController.GetAButton();
 
+       //bool const notAtTopLimit = winchLimiterTop.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
+      //bool const notAtBotLimit = winchLimiterBot.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
+
+       double m_frontLiftSpeed = 0.0;
+
+       double m_rearLiftSpeed = 0.0;
+
+       if ( xButtonPressed )
+      {
+          m_frontLiftSpeed = 1.0;
+      }
+      else if ( aButtonPressed )
+      {
+          m_frontLiftSpeed = -1.0;
+      }
+      else
+      {
+          m_frontLiftSpeed = 0.0;
+      }
+
+
+       if ( yButtonPressed )
+      {
+          m_rearLiftSpeed = 1.0;
+      }
+      else if ( bButtonPressed )
+      {
+          m_rearLiftSpeed = -1.0;
+      }
+      else
+      {
+          m_rearLiftSpeed = 0.0;
+      };
+
+      m_frontLift.Set( m_frontLiftSpeed );
+      m_rearLift.Set( m_rearLiftSpeed );
+  }
+
+
+
+
+void Robot::Tele_FourBar(  void  )
+  {
+      bool const yButtonPressed = XboxController.GetYButton();
+      bool const bButtonPressed = XboxController.GetBButton();
+      bool const xButtonPressed = XboxController.GetXButton();
+      bool const aButtonPressed = XboxController.GetAButton();
+      static int numValues = 0;
+      static long sum = 0;
+
+     numValues++;
+     sum += FourBarPot.GetValue();
+
+     if ( numValues > 20 )
+     {
+       double const avg = (double)sum / (double)numValues;
+        std::cout << avg << "\n" << std::flush;
+        numValues = 0;
+        sum = 0;
+     }
+
+
+
       frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
 
+    if ( 0 )
+    {
       std::cout << m_rearLeft.Get() << " "
       << m_rearRight.Get() << " "
       << m_frontLeft.Get() << " "
       << m_frontRight.Get()	<< " " 
       << "\n" << std::flush;
+    }
 
     if ( aButtonPressed )
     {
@@ -138,7 +206,6 @@ void Robot::Tele_Lift(  void  )
     leftarmDouble.Set(  solenoidValue );
     rightarmDouble.Set( solenoidValue );
   }
-
  
 void Robot::UpdateDriveSystem( void ) {
   frc::XboxController::JoystickHand const driveStickHand = frc::XboxController::JoystickHand::kLeftHand;
@@ -152,7 +219,8 @@ void Robot::UpdateDriveSystem( void ) {
   double const ySpeed    = deadband( DriveHandY, deadbandSize );
   double const turnSpeed = deadband( TurnHandX,  deadbandSize );
 
-  m_drive.DriveCartesian( xSpeed, ySpeed, turnSpeed );
+  //m_drive.DriveCartesian( xSpeed, ySpeed, turnSpeed );
+   m_drive.DriveCartesian( 0, 0, 0 );
 }
 
 #ifndef RUNNING_FRC_TESTS
