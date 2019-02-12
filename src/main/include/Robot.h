@@ -43,6 +43,7 @@ class Robot : public frc::TimedRobot {
   void Ball_intake( void );
   void Tele_Lift(  void  );
   void Tele_FourBar(  void  );
+  void Hatch_wrist( void );
 
 
  private:

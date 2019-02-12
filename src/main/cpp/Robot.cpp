@@ -70,6 +70,7 @@ void Robot::TeleopPeriodic() {
   Tele_FourBar();
   //Ball_intake();
   UpdateDriveSystem();
+  Hatch_wrist();
 }
 
 
