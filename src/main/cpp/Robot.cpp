@@ -71,6 +71,7 @@ void Robot::TeleopPeriodic() {
   //Ball_intake();
   UpdateDriveSystem();
   Hatch_wrist();
+  Hatch_piece();
 }
 
 
@@ -83,14 +84,28 @@ void Robot::TestPeriodic()
 
 void Robot::Hatch_wrist( void )
 {
-    bool const yButtonPressed = XboxController.GetYButton();
-    if ( yButtonPressed )
+    bool const buttonValue2 = buttonBoard.GetRawButton(2);
+    if ( buttonValue2 )
     {
         wristSolenoid.Set(true);
     }
     else
     {
         wristSolenoid.Set(false);
+    }
+    
+}
+
+void Robot::Hatch_piece( void )
+{
+    bool const buttonValue1 = buttonBoard.GetRawButton(1);
+    if ( buttonValue1 )
+    {
+        pieceSolenoid.Set(true);
+    }
+    else
+    {
+        pieceSolenoid.Set(false);
     }
     
 }
@@ -164,10 +179,10 @@ void Robot::Tele_Lift(  void  )
 
 void Robot::Tele_FourBar(  void  )
   {
-      bool const yButtonPressed = XboxController.GetYButton();
-      bool const bButtonPressed = XboxController.GetBButton();
-      bool const xButtonPressed = XboxController.GetXButton();
-      bool const aButtonPressed = XboxController.GetAButton();
+      bool const buttonValue3 = buttonBoard.GetRawButton(3);
+      bool const buttonValue4 = buttonBoard.GetRawButton(4);
+      bool const buttonValue5 = buttonBoard.GetRawButton(5);
+      bool const buttonValue6 = buttonBoard.GetRawButton(6);
       static int numValues = 0;
       static long sum = 0;
 
@@ -195,11 +210,11 @@ void Robot::Tele_FourBar(  void  )
       << "\n" << std::flush;
     }
 
-    if ( aButtonPressed )
+    if ( buttonValue3 )
     {
       solenoidValue = frc::DoubleSolenoid::Value::kForward;
     }
-    else if ( bButtonPressed )
+    else if ( buttonValue4 )
     {
       solenoidValue = frc::DoubleSolenoid::Value::kReverse;
     }

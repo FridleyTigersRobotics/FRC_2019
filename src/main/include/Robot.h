@@ -43,7 +43,7 @@ class Robot : public frc::TimedRobot {
   void Ball_intake( void );
   void Tele_Lift(  void  );
   void Tele_FourBar(  void  );
-  void Hatch_wrist( void );
+  void Hatch_piece( void );
 
 
  private:
@@ -64,7 +64,7 @@ class Robot : public frc::TimedRobot {
     // Mechanum Drive
     frc::MecanumDrive m_drive{m_frontLeft, m_rearLeft, m_frontRight, m_rearRight};
     // Game Controllers
-	frc::Joystick m_driveStick{1};
+	frc::Joystick buttonBoard{1};
     frc::XboxController XboxController{0};
     // Sensors
     //frc::ADXRS450_Gyro gyro{ frc::SPI::Port::kOnboardCS0  }; // Right turn -> positive angle
