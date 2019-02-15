@@ -52,7 +52,7 @@ class Robot : public frc::TimedRobot {
 	frc::VictorSP m_rearRight{1}; 
     frc::VictorSP m_frontLeft{2};
     frc::VictorSP m_frontRight{3};	
-    //frc::VictorSP m_ballIntake{4}; 4?
+    frc::VictorSP m_ballIntake{4};
     frc::VictorSP m_frontLift{5};
 	frc::VictorSP m_rearLift{6};
     // Solenoids
@@ -62,7 +62,7 @@ class Robot : public frc::TimedRobot {
     frc::DoubleSolenoid rightarmDouble {2, 2, 3};
 
     // Mechanum Drive
-    frc::MecanumDrive m_drive{m_frontLeft, m_rearLeft, m_frontRight, m_rearRight};
+    frc::MecanumDrive m_drive{m_frontLeft, m_frontRight, m_rearLeft, m_rearRight};
     // Game Controllers
 	frc::Joystick buttonBoard{1};
     frc::XboxController XboxController{0};
