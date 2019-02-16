@@ -20,6 +20,8 @@
 #include <frc/SmartDashboard/SmartDashboard.h>
 #include <frc/ADXRS450_Gyro.h>
 #include <frc/TimedRobot.h>
+#include <AHRS.h>
+
 
 double deadband(
     double value,
@@ -28,6 +30,7 @@ double deadband(
 
 
 class Robot : public frc::TimedRobot {
+
  public:
   void RobotInit() override;
   void RobotPeriodic() override;
