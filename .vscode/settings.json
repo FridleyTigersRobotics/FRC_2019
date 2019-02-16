@@ -66,6 +66,16 @@
     "xstddef": "cpp",
     "xstring": "cpp",
     "xtr1common": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "*.tcc": "cpp",
+    "cctype": "cpp",
+    "clocale": "cpp",
+    "complex": "cpp",
+    "cstdarg": "cpp",
+    "ctime": "cpp",
+    "cwctype": "cpp",
+    "deque": "cpp",
+    "fstream": "cpp",
+    "sstream": "cpp"
   }
 }

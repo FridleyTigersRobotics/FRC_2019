@@ -11,6 +11,43 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 
+int SumtoPot(int fourBarSum )
+    {
+        if (fourBarSum == 0)
+        {
+            return 1053;
+        }
+        else if (fourBarSum == 1)
+        {
+            return 1150;
+        }
+
+        else if (fourBarSum == 2) 
+        {
+            return 1300;
+        }
+        else if (fourBarSum == 3) 
+        {
+            return 1500;
+        }
+        else if (fourBarSum == 4) 
+        {
+            return 1700;
+        }
+        else if (fourBarSum == 5) 
+        {
+            return 2700;
+        }
+        else if (fourBarSum == 6) 
+        {
+            return 3000;
+        }
+                
+        else
+        {
+            return 1054;
+        }
+    }
 
 void Robot::RobotInit() {
         /*    // AddDefault
@@ -26,6 +63,7 @@ void Robot::RobotInit() {
   frc::SmartDashboard::PutData( "Auto Action", &actionChooser);
 
   CameraServer::GetInstance()->StartAutomaticCapture(); */
+  ahrs = new AHRS(SPI::Port::kMXP);
 }
 
 /**
@@ -37,7 +75,7 @@ void Robot::RobotInit() {
  * LiveWindow and SmartDashboard integrated updating.
  */
 void Robot::RobotPeriodic() {
-
+  //  std::cout << time.Get() << "\n";
 }
 
 /**
@@ -72,11 +110,14 @@ void Robot::AutonomousPeriodic() {
   }
 }
 
-void Robot::TeleopInit() {}
+void Robot::TeleopInit() {
+
+    time.Start();
+}
 
 void Robot::TeleopPeriodic() {
   // Enable these after testing them.
-  //Tele_Lift();
+  Tele_Lift();
   Tele_FourBar();
   Ball_intake();
   UpdateDriveSystem();
@@ -95,6 +136,12 @@ void Robot::TestPeriodic()
 void Robot::Hatch_wrist( void )
 {
     bool const buttonValue2 = buttonBoard.GetRawButton(2);
+    /*
+TODO
+toggle
+
+
+    */
     if ( buttonValue2 )
     {
         wristSolenoid.Set(true);
@@ -111,11 +158,11 @@ void Robot::Hatch_piece( void )
     bool const buttonValue1 = buttonBoard.GetRawButton(1);
     if ( buttonValue1 )
     {
-        pieceSolenoid.Set(true);
+        pieceSolenoid.Set(false);
     }
     else
     {
-        pieceSolenoid.Set(false);
+        pieceSolenoid.Set(true);
     }
     
 }
@@ -136,10 +183,9 @@ void Robot::Ball_intake( void )
 
     // Calculate the motor speeds for the specified input
     double const m_ballIntake  = inTriggerPositionWithDeadband - outTriggerPositionWithDeadband;*/
-    double m_ballIntakeSpeed=0.0;
+    double m_ballIntakeSpeed=0.15;
     bool const buttonValue5 = buttonBoard.GetRawButton(5);
     bool const buttonValue6 = buttonBoard.GetRawButton(6);
-    bool const buttonValue7 = buttonBoard.GetRawButton(7);
     
     if ( buttonValue5 )
     {
@@ -149,41 +195,40 @@ void Robot::Ball_intake( void )
     {
         m_ballIntakeSpeed = -1.0;
     }
-    else if (buttonValue7) 
-    {
-        m_ballIntakeSpeed = 0.2;
-    }
+
     else
     {
-        m_ballIntakeSpeed = 0.0;
+        m_ballIntakeSpeed = 0.15;
     }
     m_ballIntake.Set( m_ballIntakeSpeed );
 
 
 }
 
-void Robot::fourBarShifter(void)
-{
-    int fourBarSum = 0;
-    double const fourBarShiftX = buttonBoard.GetRawAxis(1);
-    double const fourBarShiftY = buttonBoard.GetRawAxis(2);
-    if (fourBarShiftX > 0.7)
-    {
-        fourBarSum += 1;
-    }
-    if else (fourBarShiftY)
-    {
-        fourBarSum -= 1;
-    }
-    
 
-}
+
+
+
+
+typedef enum
+{
+    Waiting,
+    LiftUp,
+    LiftDown,
+    TiltForward
+} lift_state_t;
+
+lift_state_t liftState = Waiting;
+
+
 void Robot::Tele_Lift(  void  )
   {
-	    bool const yButtonPressed = XboxController.GetYButton();
-      bool const bButtonPressed = XboxController.GetBButton();
-      bool const xButtonPressed = XboxController.GetXButton();
-      bool const aButtonPressed = XboxController.GetAButton();
+      bool const yButtonPressed = XboxController.GetYButton(); // up
+      bool const bButtonPressed = XboxController.GetBButton(); // tilt
+      //bool const xButtonPressed = XboxController.GetXButton();
+      bool const aButtonPressed = XboxController.GetAButton(); // down
+      bool const buttonValue10 = buttonBoard.GetRawButton(10); // down
+      bool const buttonValue9 = buttonBoard.GetRawButton(9); // down
 
        //bool const notAtTopLimit = winchLimiterTop.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
       //bool const notAtBotLimit = winchLimiterBot.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
@@ -192,34 +237,75 @@ void Robot::Tele_Lift(  void  )
 
        double m_rearLiftSpeed = 0.0;
 
-       if ( xButtonPressed )
+    //std::cout << "pitch " << ahrs->GetPitch() << "\n";
+    //std::cout << "roll " << ahrs->GetRoll() << "\n";
+    //std::cout << "yaw " << ahrs->GetYaw() << "\n";
+
+      if ( buttonValue10 )
       {
-          m_frontLiftSpeed = 1.0;
+          liftState = TiltForward;
+      }
+      else if ( buttonValue9 )
+      {
+          liftState = LiftUp;
       }
       else if ( aButtonPressed )
       {
-          m_frontLiftSpeed = -1.0;
+          liftState = LiftDown;
       }
       else
+      {
+          liftState = Waiting;
+      }
+
+      if ( liftState == LiftUp )
+      {
+          double const desiredAngle = 2.5;
+          double const maxSpeed = 0.9;
+          double const maxAngle = 15.0;
+          double angle = ahrs->GetRoll();
+          double angleError = angle - desiredAngle;
+          m_frontLiftSpeed = maxSpeed;
+          m_rearLiftSpeed  = maxSpeed;
+
+          if ( angleError > 0 )
+          {
+              // Tilting backwards, slow front motor
+              double motorSpeedDiff    = angleError / maxAngle;
+              double motorSpeedDiffSat = ( motorSpeedDiff > maxSpeed ) ? maxSpeed : motorSpeedDiff; 
+
+              m_frontLiftSpeed -= motorSpeedDiffSat;
+          }
+          else
+          {
+              // Tilting forwards, slow rear motor
+              double motorSpeedDiff    = -angleError / maxAngle;
+              double motorSpeedDiffSat = ( motorSpeedDiff > maxSpeed ) ? maxSpeed : motorSpeedDiff; 
+
+              m_rearLiftSpeed -= motorSpeedDiffSat;
+          }
+
+      }
+      else if ( liftState == TiltForward )
+      {
+          m_frontLiftSpeed = -1.0;
+          m_rearLiftSpeed = 0.0;
+
+
+
+      }
+      else if ( liftState == LiftDown )
+      {
+          m_frontLiftSpeed = -1.0;
+          m_rearLiftSpeed  = -1.0;
+      }
+      else // waiting
       {
           m_frontLiftSpeed = 0.0;
+          m_rearLiftSpeed  = 0.0;
       }
 
-
-       if ( yButtonPressed )
-      {
-          m_rearLiftSpeed = 1.0;
-      }
-      else if ( bButtonPressed )
-      {
-          m_rearLiftSpeed = -1.0;
-      }
-      else
-      {
-          m_rearLiftSpeed = 0.0;
-      };
-
-      m_frontLift.Set( m_frontLiftSpeed );
+      m_frontLift.Set( -m_frontLiftSpeed );
       m_rearLift.Set( m_rearLiftSpeed );
   }
 
@@ -230,17 +316,63 @@ void Robot::Tele_FourBar(  void  )
   {
       bool const buttonValue3 = buttonBoard.GetRawButton(3);
       bool const buttonValue4 = buttonBoard.GetRawButton(4);
+      double const fourBarShift = buttonBoard.GetRawAxis(1);
+      std::cout <<"4bar "<< fourBarShift << "\n";
+      
+      static int fourBarSum = 0;
 
       static int numValues = 0;
       static long sum = 0;
+    
+      static int buttonCount = 0;
+      static double lastButtonValue  = 0;
+
+      std::cout <<"4barsum "<< fourBarSum << "\n";
+
+
+    if (lastButtonValue == fourBarShift)
+    {
+        if ( buttonCount < 10 )
+        {
+            buttonCount += 1;
+        }   
+    }
+    else
+    {
+        buttonCount = 0;
+        lastButtonValue = fourBarShift;
+    }
+
+    if (buttonCount == 6)
+    {
+      if (fourBarShift == 1)
+      {
+          if (fourBarSum < 5)
+            {
+                fourBarSum += 1;
+            }
+
+      }
+      if (fourBarShift == -1)
+      {
+          if (fourBarSum > 0)
+            {
+                fourBarSum -= 1;
+            }
+
+      }
+    }
+
 
      numValues++;
-     sum += FourBarPot.GetValue();
+     int potValue = FourBarPot.GetValue();
+     sum += potValue;
+     std::cout << "pot"  << potValue << "\n";
 
      if ( numValues > 20 )
      {
        double const avg = (double)sum / (double)numValues;
-        std::cout << avg << "\n" << std::flush;
+        //std::cout << avg << "\n" << std::flush;
         numValues = 0;
         sum = 0;
      }
@@ -257,7 +389,25 @@ void Robot::Tele_FourBar(  void  )
       << m_frontRight.Get()	<< " " 
       << "\n" << std::flush;
     }
+    double const errorThreshold = 250;
+    double fourBarError;
+    fourBarError = potValue - SumtoPot(fourBarSum);
 
+    if (fourBarError > errorThreshold)
+    {
+        solenoidValue = frc::DoubleSolenoid::Value::kReverse;
+    }
+    if (fourBarError < -errorThreshold)
+    {
+        solenoidValue = frc::DoubleSolenoid::Value::kForward;
+    }    
+
+
+
+
+
+
+/*
     if ( buttonValue3 )
     {
       solenoidValue = frc::DoubleSolenoid::Value::kForward;
@@ -266,7 +416,7 @@ void Robot::Tele_FourBar(  void  )
     {
       solenoidValue = frc::DoubleSolenoid::Value::kReverse;
     }
-
+*/
     leftarmDouble.Set(  solenoidValue );
     rightarmDouble.Set( solenoidValue );
   }
@@ -289,7 +439,6 @@ void Robot::UpdateDriveSystem( void ) {
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
-
 
 
 
