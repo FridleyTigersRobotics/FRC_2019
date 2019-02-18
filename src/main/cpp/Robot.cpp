@@ -225,10 +225,43 @@ void Robot::Tele_Lift(  void  )
   {
       bool const yButtonPressed = XboxController.GetYButton(); // up
       bool const bButtonPressed = XboxController.GetBButton(); // tilt
-      //bool const xButtonPressed = XboxController.GetXButton();
+      bool const xButtonPressed = XboxController.GetXButton();
       bool const aButtonPressed = XboxController.GetAButton(); // down
       bool const buttonValue10 = buttonBoard.GetRawButton(10); // down
       bool const buttonValue9 = buttonBoard.GetRawButton(9); // down
+
+
+    if ( 0 )
+    {
+        if ( yButtonPressed )
+        {
+            m_frontLift.Set( 0.8 );
+        }
+        else if ( bButtonPressed)
+        {
+            m_frontLift.Set( -0.8 );
+        }
+        else
+        {
+            m_frontLift.Set( 0.0 );
+        }
+    
+        if ( xButtonPressed )
+        {
+            m_rearLift.Set( -0.8 );
+        }
+        else if ( aButtonPressed)
+        {
+            m_rearLift.Set( 0.8 );
+        }
+        else
+        {
+            m_rearLift.Set( 0.0 );
+        }
+    }
+    else
+    {
+
 
        //bool const notAtTopLimit = winchLimiterTop.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
       //bool const notAtBotLimit = winchLimiterBot.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
@@ -307,105 +340,339 @@ void Robot::Tele_Lift(  void  )
 
       m_frontLift.Set( -m_frontLiftSpeed );
       m_rearLift.Set( m_rearLiftSpeed );
+    }
   }
 
 
 
 
 void Robot::Tele_FourBar(  void  )
-  {
-      bool const buttonValue3 = buttonBoard.GetRawButton(3);
-      bool const buttonValue4 = buttonBoard.GetRawButton(4);
-      double const fourBarShift = buttonBoard.GetRawAxis(1);
-      std::cout <<"4bar "<< fourBarShift << "\n";
-      
-      static int fourBarSum = 0;
-
-      static int numValues = 0;
-      static long sum = 0;
-    
-      static int buttonCount = 0;
-      static double lastButtonValue  = 0;
-
-      std::cout <<"4barsum "<< fourBarSum << "\n";
-
-
-    if (lastButtonValue == fourBarShift)
+{
+    if ( 0 )
     {
-        if ( buttonCount < 10 )
+        frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
+
+        static bool lastWasUp = false;
+        const int  offCounterUpMax   = 5;
+        const int  offCounterDownMax = 0;
+        static int offCounter = 0;
+
+
+
+        int const  buttonCountThreshold = 3;
+        int const  numButtons = 4;
+        int static buttonCounts[numButtons] = { 0 }; 
+        static bool TurnOffSolenoids = true;
+        bool handleButtonPress[numButtons] = { false }; 
+        bool handleButtonRelease[numButtons] = { false }; 
+
+        for ( int button = 0; button < numButtons; button++ )
         {
-            buttonCount += 1;
-        }   
+            bool const buttonValue = buttonBoard.GetRawButton( button + 1 );
+
+            if ( buttonValue )
+            {
+                if ( buttonCounts[button] <= buttonCountThreshold )
+                {
+                    buttonCounts[button]++;
+                }
+            }
+            else
+            {
+                if ( buttonCounts[button] >= buttonCountThreshold )
+                {
+                    handleButtonPress[button]   = false;
+                    handleButtonRelease[button] = true;
+                }
+                buttonCounts[button] = 0;
+            }
+
+            if ( buttonCounts[button] == buttonCountThreshold )
+            {
+                handleButtonPress[button]   = true;
+                handleButtonRelease[button] = false;
+            }
+        } 
+
+
+        if ( TurnOffSolenoids == true )
+        {
+            offCounter++;
+
+            if ( ( lastWasUp && (offCounter > offCounterUpMax)) || 
+                (!lastWasUp && (offCounter > offCounterDownMax)) )
+            {
+                std::cout << "off" << offCounter << "\n";
+                leftarmDouble.Set(  frc::DoubleSolenoid::Value::kReverse );
+                rightarmDouble.Set( frc::DoubleSolenoid::Value::kReverse );
+                offCounter = 0;
+                TurnOffSolenoids = false;
+            }
+        }
+
+
+        if ( handleButtonPress[0] )
+        {
+            std::cout << "forward\n";
+            leftarmDouble.Set(  frc::DoubleSolenoid::Value::kForward );
+            rightarmDouble.Set( frc::DoubleSolenoid::Value::kReverse );
+            TurnOffSolenoids = false;
+        }
+        else if ( handleButtonPress[1] )
+        {
+            std::cout << "reverse\n";
+            leftarmDouble.Set(  frc::DoubleSolenoid::Value::kReverse );
+            rightarmDouble.Set( frc::DoubleSolenoid::Value::kForward );
+            TurnOffSolenoids = false;
+        }
+        else if ( handleButtonPress[2] )
+        {
+            std::cout << "forward\n";
+            leftarmDouble.Set(  frc::DoubleSolenoid::Value::kForward );
+            rightarmDouble.Set( frc::DoubleSolenoid::Value::kReverse );
+            TurnOffSolenoids = true;
+            lastWasUp = true;
+        }
+        else if ( handleButtonPress[3] )
+        {
+            std::cout << "reverse\n";
+            leftarmDouble.Set(  frc::DoubleSolenoid::Value::kReverse );
+            rightarmDouble.Set( frc::DoubleSolenoid::Value::kForward );
+            TurnOffSolenoids = true;
+            lastWasUp = false;
+        }
+
     }
     else
     {
-        buttonCount = 0;
-        lastButtonValue = fourBarShift;
-    }
-
-    if (buttonCount == 6)
-    {
-      if (fourBarShift == 1)
-      {
-          if (fourBarSum < 5)
-            {
-                fourBarSum += 1;
-            }
-
-      }
-      if (fourBarShift == -1)
-      {
-          if (fourBarSum > 0)
-            {
-                fourBarSum -= 1;
-            }
-
-      }
-    }
-
-
-     numValues++;
-     int potValue = FourBarPot.GetValue();
-     sum += potValue;
-     std::cout << "pot"  << potValue << "\n";
-
-     if ( numValues > 20 )
-     {
-       double const avg = (double)sum / (double)numValues;
-        //std::cout << avg << "\n" << std::flush;
-        numValues = 0;
-        sum = 0;
-     }
-
-
-
       frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
+      bool const buttonValue3 = buttonBoard.GetRawButton(3);
+      bool const buttonValue4 = buttonBoard.GetRawButton(4);
+      double const fourBarShift = buttonBoard.GetRawAxis(1);
 
-    if ( 0 )
-    {
-      std::cout << m_rearLeft.Get() << " "
-      << m_rearRight.Get() << " "
-      << m_frontLeft.Get() << " "
-      << m_frontRight.Get()	<< " " 
-      << "\n" << std::flush;
+        static int fourBarSum = 0;
+
+        static int numValues = 0;
+        static long sum = 0;
+        
+        static int buttonCount = 0;
+        static double lastButtonValue  = 0;
+
+
+        if (lastButtonValue == fourBarShift)
+        {
+            if ( buttonCount < 10 )
+            {
+                buttonCount += 1;
+            }   
+        }
+        else
+        {
+            buttonCount = 0;
+            lastButtonValue = fourBarShift;
+        }
+
+        if (buttonCount == 3)
+        {
+        if (fourBarShift == 1)
+        {
+            if (fourBarSum < 5)
+                {
+                    fourBarSum += 1;
+                }
+
+        }
+        if (fourBarShift == -1)
+        {
+            if (fourBarSum > 0)
+                {
+                    fourBarSum -= 1;
+                }
+
+        }
+        }
+
+
+        numValues++;
+        int potValue = FourBarPot.GetValue();
+        sum += potValue;
+        //std::cout << "pot"  << potValue << "\n";
+
+        if ( numValues > 20 )
+        {
+        double const avg = (double)sum / (double)numValues;
+            //std::cout << avg << "\n" << std::flush;
+            numValues = 0;
+            sum = 0;
+        }
+
+
+        if ( 0 )
+        {
+            std::cout << m_rearLeft.Get() << " "
+            << m_rearRight.Get() << " "
+            << m_frontLeft.Get() << " "
+            << m_frontRight.Get()	<< " " 
+            << "\n" << std::flush;
+        }
+
+
+
+
+
+
+
+        static double lastPotValue = 0;
+        double const errorThreshold = 250;
+        int fourBarError;
+        fourBarError = potValue - SumtoPot(fourBarSum);
+        double fourBarDeriv = potValue - lastPotValue;
+
+        static int Index = 0;
+        int const numHistValues = 5;
+        static int PotValueHist[numHistValues] = { 0 };
+
+
+        static bool currentSolenoidValuesInit = false;
+        static  frc::DoubleSolenoid::Value currentSolenoidValues[numHistValues];
+
+        if ( currentSolenoidValuesInit == false )
+        {
+            currentSolenoidValuesInit = true;
+            for ( int idx = 0; idx < numHistValues; idx++ )
+            {
+                currentSolenoidValues[idx] = frc::DoubleSolenoid::Value::kOff;
+            }
+        }
+
+        static uint32_t DutyCycleHistIndex = 0;
+        const  uint32_t DutyCycleHistLen = 5;
+
+        static int64_t errorIntegral = 0;
+        solenoidValue = currentSolenoidValues[Index];
+
+        PotValueHist[Index] = potValue;
+
+
+        errorIntegral += fourBarError;
+
+        double Kp = 0.006;
+        double Ki = 0.00001;
+        double Kd = 0.01;
+
+        static int LastError = 0;
+
+        int errorDerivative = LastError - fourBarError;
+        static double errorDerivativeSum = 0.0;
+        static double errorSum = 0.0;
+        static double errorIntegralSum = 0.0;
+        static double PositionSum = 0.0;
+
+        errorSum += fourBarError;
+        errorDerivativeSum += errorDerivative;
+        errorIntegralSum += errorIntegral;
+        PositionSum += potValue;
+        LastError = fourBarError;
+
+
+
+
+
+
+        if ( Index == ( numHistValues - 1 ) )
+        {
+            double errorDerivativeAvg = errorDerivativeSum / numHistValues;
+            double errorAvg = errorSum / numHistValues;
+            double errorIntegralAvg = errorIntegralSum / numHistValues;
+            double PositionAvg = PositionSum / numHistValues;
+
+            frc::DoubleSolenoid::Value dir;
+            
+
+            //double DutyCycleDbl = Kp * (double)errorAvg + Ki * (double)errorIntegralAvg + Kd * (double)errorDerivativeAvg;
+            double DutyCycleDbl = Kp * (double)fourBarError + Ki * (double)errorIntegral + Kd * (double)errorDerivative;
+            //int DutyCycle = floor( abs( DutyCycleDbl ) );
+            int DutyCycle = (DutyCycleDbl > 0) ? ( std::min( floor( abs( DutyCycleDbl ) ), 2.0 ) ) : ( floor( abs( DutyCycleDbl ) ) );
+
+
+            std::cout
+            << Index << " "
+            << errorAvg << " "
+            << PositionAvg << " "
+            << solenoidValue << " "
+            << SumtoPot(fourBarSum) << " "
+            << errorIntegralAvg << " "
+            << errorDerivativeAvg << " "
+            << DutyCycleDbl << " "
+            << DutyCycle * ( (DutyCycleDbl < 0)? (-1) : ( 1 ) ) << " "
+            << Kp * (double)errorAvg << " "
+            << Ki * (double)errorIntegralAvg << " "
+            << Kd * (double)errorDerivativeAvg << " "
+            << Kp * (double)fourBarError << " "
+            << Ki * (double)errorIntegral << " "
+            << Kd * (double)errorDerivative << " "
+            "\n";
+
+            errorDerivativeSum = 0.0;
+            errorSum = 0.0;
+            errorIntegralSum = 0.0;
+            PositionSum = 0.0;
+
+
+            if ( DutyCycleDbl > 0 )
+            {
+                dir = frc::DoubleSolenoid::Value::kReverse;
+            }
+            else
+            {
+                dir = frc::DoubleSolenoid::Value::kForward;
+            }
+
+            for ( int idx = 0; idx < numHistValues; idx++ )
+            {
+                if ( idx < DutyCycle )
+                {
+                    currentSolenoidValues[idx] = dir;
+                }
+                else
+                {
+                    currentSolenoidValues[idx] = frc::DoubleSolenoid::Value::kOff;
+                }
+            }
+
+            Index = 0;
+        }
+        else
+        {
+            Index++;
+        }
+
+        if ( solenoidValue == frc::DoubleSolenoid::Value::kForward )
+        {
+            leftarmDouble.Set(  frc::DoubleSolenoid::Value::kForward );
+            rightarmDouble.Set( frc::DoubleSolenoid::Value::kReverse );
+        }
+        else if ( solenoidValue == frc::DoubleSolenoid::Value::kReverse )
+        {
+            leftarmDouble.Set(  frc::DoubleSolenoid::Value::kReverse );
+            rightarmDouble.Set( frc::DoubleSolenoid::Value::kForward );
+        }
+        else
+        {
+            leftarmDouble.Set(  frc::DoubleSolenoid::Value::kReverse );
+            rightarmDouble.Set( frc::DoubleSolenoid::Value::kReverse );
+        }
+
     }
-    double const errorThreshold = 250;
-    double fourBarError;
-    fourBarError = potValue - SumtoPot(fourBarSum);
+    
+    
 
-    if (fourBarError > errorThreshold)
-    {
-        solenoidValue = frc::DoubleSolenoid::Value::kReverse;
-    }
-    if (fourBarError < -errorThreshold)
-    {
-        solenoidValue = frc::DoubleSolenoid::Value::kForward;
-    }    
+// override with big cylinder    
+    //if(buttonValue3)
+    //solenoidValue = frc::DoubleSolenoid::Value::kForward;
+    //if(buttonValue4)solenoidValue = frc::DoubleSolenoid::Value::kReverse;
 
-
-
-
-
+//end override
 
 /*
     if ( buttonValue3 )
@@ -417,8 +684,8 @@ void Robot::Tele_FourBar(  void  )
       solenoidValue = frc::DoubleSolenoid::Value::kReverse;
     }
 */
-    leftarmDouble.Set(  solenoidValue );
-    rightarmDouble.Set( solenoidValue );
+
+
   }
  
 void Robot::UpdateDriveSystem( void ) {
