@@ -15,24 +15,27 @@ int SumtoPot(int fourBarSum)
 {
     if (fourBarSum == 0)
     {
-        return 1053;
+        // ground
+        return 1012;
     }
     else if (fourBarSum == 1)
     {
-        return 1150;
+        return 1300;
     }
 
     else if (fourBarSum == 2)
     {
-        return 1300;
+        // cargo level 1
+        return 1728;
     }
     else if (fourBarSum == 3)
     {
-        return 1500;
+        // Rocket hatch level 2
+        return 2070;
     }
     else if (fourBarSum == 4)
     {
-        return 1700;
+        return 3043;
     }
     else if (fourBarSum == 5)
     {
@@ -40,7 +43,8 @@ int SumtoPot(int fourBarSum)
     }
     else if (fourBarSum == 6)
     {
-        return 3000;
+        //Hatch level 3 / max
+        return 3043;
     }
 
     else
@@ -62,8 +66,8 @@ void Robot::RobotInit()
   actionChooser.AddObject( "2) Hatch", HATCH );
   actionChooser.AddObject( "3) Cargo", Cargo );
   frc::SmartDashboard::PutData( "Auto Action", &actionChooser);
-
-  CameraServer::GetInstance()->StartAutomaticCapture(); */
+*/
+  CameraServer::GetInstance()->StartAutomaticCapture( 0 ); 
     ahrs = new AHRS(SPI::Port::kMXP);
 }
 
@@ -93,23 +97,25 @@ void Robot::RobotPeriodic()
  */
 void Robot::AutonomousInit()
 {
-    m_autoSelected = m_chooser.GetSelected();
+ //   m_autoSelected = m_chooser.GetSelected();
     // m_autoSelected = SmartDashboard::GetString(
     //     "Auto Selector", kAutoNameDefault);
     //std::cout << "Auto selected: " << m_autoSelected << std::endl;
-
-    if (m_autoSelected == kAutoNameCustom)
-    {
-        // Custom Auto goes here
-    }
-    else
-    {
-        // Default Auto goes here
-    }
+/*
+  if ( startingPosition == LEFT_POSITION &&
+             autoAction       == LOAD_HATCH   &&
+            )
+        {
+            AutoCommandList = FromLeftLoadHatch;
+        }
+        */
 }
+ 
+
 
 void Robot::AutonomousPeriodic()
 {
+    //TeleopPeriodic();
     if (m_autoSelected == kAutoNameCustom)
     {
         // Custom Auto goes here
@@ -144,13 +150,36 @@ void Robot::TestPeriodic()
 void Robot::Hatch_wrist(void)
 {
     bool const buttonValue2 = buttonBoard.GetRawButton(2);
-    /*
-TODO
-toggle
+    const int buttonPressCountLimit1 = 3;
+    static int buttonPressCount1 = 0;
+    static int wristToggle = 0;
 
-
-    */
     if (buttonValue2)
+    {
+        if ( buttonPressCount1 <= buttonPressCountLimit1 )
+        {
+            buttonPressCount1++;
+        }
+
+        if ( buttonPressCount1 == buttonPressCountLimit1 )
+        {
+            if (wristToggle == 0)
+            {
+                wristToggle = 1;
+            }
+            else
+            { 
+                wristToggle = 0;
+            }
+        }
+    }
+    else
+    {
+        buttonPressCount1 = 0;
+    }
+    
+
+    if ( wristToggle == 1 )
     {
         wristSolenoid.Set(true);
     }
@@ -158,19 +187,54 @@ toggle
     {
         wristSolenoid.Set(false);
     }
+
+
+
 }
 
 void Robot::Hatch_piece(void)
 {
     bool const buttonValue1 = buttonBoard.GetRawButton(1);
+    const int buttonPressCountLimit = 3;
+    static int buttonPressCount = 0;
+    static int pieceToggle = 0;
+
     if (buttonValue1)
     {
-        pieceSolenoid.Set(false);
+        if ( buttonPressCount <= buttonPressCountLimit )
+        {
+            buttonPressCount++;
+        }
+
+        if ( buttonPressCount == buttonPressCountLimit )
+        {
+            if (pieceToggle == 0)
+            {
+                pieceToggle = 1;
+            }
+            else
+            { 
+                pieceToggle = 0;
+            }
+        }
     }
     else
     {
+        buttonPressCount = 0;
+    }
+    
+
+    if ( pieceToggle == 1 )
+    {
         pieceSolenoid.Set(true);
     }
+    else
+    {
+        pieceSolenoid.Set(false);
+    }
+
+
+
 }
 
 void Robot::Ball_intake(void)
@@ -195,16 +259,16 @@ void Robot::Ball_intake(void)
 
     if (buttonValue5)
     {
-        m_ballIntakeSpeed = 1.0;
+        m_ballIntakeSpeed = -0.5;
     }
     else if (buttonValue6)
     {
-        m_ballIntakeSpeed = -1.0;
+        m_ballIntakeSpeed = 0.5;
     }
 
     else
     {
-        m_ballIntakeSpeed = 0.15;
+        m_ballIntakeSpeed = -0.2;
     }
     m_ballIntake.Set(m_ballIntakeSpeed);
 }
@@ -228,7 +292,7 @@ void Robot::Tele_Lift(void)
     bool const buttonValue10 = buttonBoard.GetRawButton(10); // down
     bool const buttonValue9 = buttonBoard.GetRawButton(9);   // down
 
-    if (0)
+    if (1)
     {
         if (yButtonPressed)
         {
@@ -459,7 +523,7 @@ void Robot::Tele_FourBar(void)
         {
             if (fourBarShift == 1)
             {
-                if (fourBarSum < 5)
+                if (fourBarSum < 6)
                 {
                     fourBarSum += 1;
                 }
@@ -477,11 +541,11 @@ void Robot::Tele_FourBar(void)
         int potValue = FourBarPot.GetValue();
         sum += potValue;
         //std::cout << "pot"  << potValue << "\n";
-
-        if (numValues > 20)
+        //std::cout << FourBarPot.GetValue() << "\n";
+        if (numValues > 50)
         {
             double const avg = (double)sum / (double)numValues;
-            //std::cout << avg << "\n" << std::flush;
+            //std::cout << avg << "\n";
             numValues = 0;
             sum = 0;
         }
@@ -562,17 +626,13 @@ void Robot::Tele_FourBar(void)
 
             std::cout
                 << Index << " "
-                << errorAvg << " "
-                << PositionAvg << " "
+                << fourBarSum << " "
                 << solenoidValue << " "
                 << SumtoPot(fourBarSum) << " "
                 << errorIntegralAvg << " "
                 << errorDerivativeAvg << " "
                 << DutyCycleDbl << " "
                 << DutyCycle * ((DutyCycleDbl < 0) ? (-1) : (1)) << " "
-                << Kp * (double)errorAvg << " "
-                << Ki * (double)errorIntegralAvg << " "
-                << Kd * (double)errorDerivativeAvg << " "
                 << Kp * (double)fourBarError << " "
                 << Ki * (double)errorIntegral << " "
                 << Kd * (double)errorDerivative << " "
@@ -662,6 +722,11 @@ void Robot::UpdateDriveSystem(void)
 
     m_drive.DriveCartesian(xSpeed, ySpeed, turnSpeed);
 }
+
+
+
+
+
 
 #ifndef RUNNING_FRC_TESTS
 int main()
