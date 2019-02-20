@@ -20,36 +20,32 @@ int SumtoPot(int fourBarSum)
     }
     else if (fourBarSum == 1)
     {
-        return 1300;
+        return 1100;
     }
 
     else if (fourBarSum == 2)
     {
         // cargo level 1
-        return 1728;
+        return 1770;
     }
     else if (fourBarSum == 3)
     {
         // Rocket hatch level 2
-        return 2070;
+        return 2100;
     }
     else if (fourBarSum == 4)
     {
-        return 3043;
+        return 2740;
     }
     else if (fourBarSum == 5)
     {
-        return 2700;
-    }
-    else if (fourBarSum == 6)
-    {
         //Hatch level 3 / max
-        return 3043;
+        return 3020;
     }
 
     else
     {
-        return 1054;
+        return 1012;
     }
 }
 
@@ -67,7 +63,7 @@ void Robot::RobotInit()
   actionChooser.AddObject( "3) Cargo", Cargo );
   frc::SmartDashboard::PutData( "Auto Action", &actionChooser);
 */
-  CameraServer::GetInstance()->StartAutomaticCapture( 0 ); 
+    CameraServer::GetInstance()->StartAutomaticCapture( 0 ); 
     ahrs = new AHRS(SPI::Port::kMXP);
 }
 
@@ -115,15 +111,10 @@ void Robot::AutonomousInit()
 
 void Robot::AutonomousPeriodic()
 {
-    //TeleopPeriodic();
-    if (m_autoSelected == kAutoNameCustom)
-    {
-        // Custom Auto goes here
-    }
-    else
-    {
-        // Default Auto goes here
-    }
+    TeleopPeriodic();
+
+
+
 }
 
 void Robot::TeleopInit()
@@ -226,11 +217,11 @@ void Robot::Hatch_piece(void)
 
     if ( pieceToggle == 1 )
     {
-        pieceSolenoid.Set(true);
+        pieceSolenoid.Set(false);
     }
     else
     {
-        pieceSolenoid.Set(false);
+        pieceSolenoid.Set(true);
     }
 
 
@@ -278,7 +269,9 @@ typedef enum
     Waiting,
     LiftUp,
     LiftDown,
-    TiltForward
+    TiltForward,
+    RetractFront,
+    RetractRear
 } lift_state_t;
 
 lift_state_t liftState = Waiting;
@@ -292,7 +285,8 @@ void Robot::Tele_Lift(void)
     bool const buttonValue10 = buttonBoard.GetRawButton(10); // down
     bool const buttonValue9 = buttonBoard.GetRawButton(9);   // down
 
-    if (1)
+
+    if (0)
     {
         if (yButtonPressed)
         {
@@ -322,10 +316,6 @@ void Robot::Tele_Lift(void)
     }
     else
     {
-
-        //bool const notAtTopLimit = winchLimiterTop.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
-        //bool const notAtBotLimit = winchLimiterBot.Get(); // Value of the limiter is nominally one, and zero when limit is hit.
-
         double m_frontLiftSpeed = 0.0;
 
         double m_rearLiftSpeed = 0.0;
@@ -334,68 +324,160 @@ void Robot::Tele_Lift(void)
         //std::cout << "roll " << ahrs->GetRoll() << "\n";
         //std::cout << "yaw " << ahrs->GetYaw() << "\n";
 
-        if (buttonValue10)
-        {
-            liftState = TiltForward;
-        }
-        else if (buttonValue9)
-        {
-            liftState = LiftUp;
-        }
-        else if (aButtonPressed)
-        {
-            liftState = LiftDown;
-        }
-        else
-        {
-            liftState = Waiting;
-        }
 
-        if (liftState == LiftUp)
-        {
-            double const desiredAngle = 2.5;
-            double const maxSpeed = 0.9;
-            double const maxAngle = 15.0;
-            double angle = ahrs->GetRoll();
-            double angleError = angle - desiredAngle;
-            m_frontLiftSpeed = maxSpeed;
-            m_rearLiftSpeed = maxSpeed;
+        //switch position is the variable, for example rear top limit is the switch measuring whtn the rear leg is fully extended below the robot
+        bool const rearTopLimit = rearLimiterTop.Get(); 
+        bool const rearBotLimit = rearLimiterBot.Get();
+        bool const frontTopLimit = frontLimiterTop.Get(); 
+        bool const frontBotLimit = frontLimiterBot.Get(); 
 
-            if (angleError > 0)
+        std::cout << "limits " << rearTopLimit << " " 
+        << rearBotLimit << " "
+        << frontTopLimit << " "
+        << frontBotLimit << "\n";
+
+
+
+        // OVerride automated climbing with manual
+        if ( yButtonPressed || xButtonPressed || aButtonPressed || bButtonPressed ) 
+        {
+            if (yButtonPressed)
             {
-                // Tilting backwards, slow front motor
-                double motorSpeedDiff = angleError / maxAngle;
-                double motorSpeedDiffSat = (motorSpeedDiff > maxSpeed) ? maxSpeed : motorSpeedDiff;
+                if ( frontBotLimit )
+                {
+                    m_frontLift.Set(0.8);
+                }
+                else
+                {
+                    m_frontLift.Set(0.0);
+                }
+            }
+            else if (bButtonPressed)
+            {
+                if ( frontTopLimit )
+                {
+                    m_frontLift.Set(-0.8);
+                }
+                else
+                {
+                    m_frontLift.Set(0.0);
+                }
 
-                m_frontLiftSpeed -= motorSpeedDiffSat;
             }
             else
             {
-                // Tilting forwards, slow rear motor
-                double motorSpeedDiff = -angleError / maxAngle;
-                double motorSpeedDiffSat = (motorSpeedDiff > maxSpeed) ? maxSpeed : motorSpeedDiff;
+                m_frontLift.Set(0.0);
+            }
 
-                m_rearLiftSpeed -= motorSpeedDiffSat;
+            if (xButtonPressed)
+            {
+                if ( rearBotLimit )
+                {
+                    m_rearLift.Set(-0.8);
+                }
+                else
+                {
+                    m_rearLift.Set(0.0);
+                }
+            }
+            else if (aButtonPressed)
+            {
+                if ( rearTopLimit )
+                {
+                    m_rearLift.Set(0.8);
+                }
+                else
+                {
+                    m_rearLift.Set(0.0);
+                }
+            }
+            else
+            {
+                m_rearLift.Set(0.0);
             }
         }
-        else if (liftState == TiltForward)
+        else
         {
-            m_frontLiftSpeed = -1.0;
-            m_rearLiftSpeed = 0.0;
-        }
-        else if (liftState == LiftDown)
-        {
-            m_frontLiftSpeed = -1.0;
-            m_rearLiftSpeed = -1.0;
-        }
-        else // waiting
-        {
-            m_frontLiftSpeed = 0.0;
-            m_rearLiftSpeed = 0.0;
-        }
+            if (buttonValue10 || (!rearTopLimit && !frontTopLimit))
+            {
+                liftState = TiltForward;
+            }
+            else if (buttonValue9)
+            {
+                if(liftState !=TiltForward){
+                    liftState = LiftUp;
+                }
+                else{
+                    liftState = TiltForward;
+                }
+            }
+            else 
+            {
+                liftState = Waiting;
+            }
 
-        m_frontLift.Set(-m_frontLiftSpeed);
-        m_rearLift.Set(m_rearLiftSpeed);
+
+            if (liftState == LiftUp)
+            {
+                double const desiredAngle = 2.5;
+                double const maxSpeed = 0.9;
+                double const maxAngle = 15.0;
+                double angle = ahrs->GetRoll();
+                double angleError = angle - desiredAngle;
+                m_frontLiftSpeed = maxSpeed;
+                m_rearLiftSpeed = maxSpeed;
+
+                if (angleError > 0)
+                {
+                    // Tilting backwards, slow front motor
+                    double motorSpeedDiff = angleError / maxAngle;
+                    double motorSpeedDiffSat = (motorSpeedDiff > maxSpeed) ? maxSpeed : motorSpeedDiff;
+
+                    m_frontLiftSpeed -= motorSpeedDiffSat;
+                }
+                else
+                {
+                    // Tilting forwards, slow rear motor
+                    double motorSpeedDiff = -angleError / maxAngle;
+                    double motorSpeedDiffSat = (motorSpeedDiff > maxSpeed) ? maxSpeed : motorSpeedDiff;
+
+                    m_rearLiftSpeed -= motorSpeedDiffSat;
+                }
+                if(!rearTopLimit){
+                    m_rearLiftSpeed=0;
+                }
+                if(!frontTopLimit){
+                    m_frontLiftSpeed=0;
+                } 
+            }
+            else if (liftState == TiltForward)
+            {
+                m_frontLiftSpeed = -1.0;
+                if(!frontBotLimit){
+                    m_frontLiftSpeed=0;
+                }
+                m_rearLiftSpeed = 0.0;
+            }
+            else if (liftState == LiftDown)
+            {
+                m_frontLiftSpeed = -1.0;
+                m_rearLiftSpeed = -1.0;
+                if(!rearBotLimit){
+                    m_rearLiftSpeed=0;
+                }
+                if(!frontBotLimit){
+                    m_frontLiftSpeed=0;
+                }
+            }     
+            else // waiting
+            {
+                m_frontLiftSpeed = 0.0;
+                m_rearLiftSpeed = 0.0;
+            }
+
+            m_frontLift.Set(-m_frontLiftSpeed);
+            m_rearLift.Set(m_rearLiftSpeed);
+        }
     }
 }
 
@@ -497,6 +579,7 @@ void Robot::Tele_FourBar(void)
         bool const buttonValue3 = buttonBoard.GetRawButton(3);
         bool const buttonValue4 = buttonBoard.GetRawButton(4);
         double const fourBarShift = buttonBoard.GetRawAxis(1);
+        //double const fourBarShift2 = buttonBoard.GetRawAxis(0);
 
         static int fourBarSum = 0;
 
@@ -506,7 +589,7 @@ void Robot::Tele_FourBar(void)
         static int buttonCount = 0;
         static double lastButtonValue = 0;
 
-        if (lastButtonValue == fourBarShift)
+        if ((lastButtonValue == fourBarShift) )
         {
             if (buttonCount < 10)
             {
@@ -521,14 +604,14 @@ void Robot::Tele_FourBar(void)
 
         if (buttonCount == 3)
         {
-            if (fourBarShift == 1)
+            if (fourBarShift == -1)
             {
                 if (fourBarSum < 6)
                 {
                     fourBarSum += 1;
                 }
             }
-            if (fourBarShift == -1)
+            if (fourBarShift == 1)
             {
                 if (fourBarSum > 0)
                 {
@@ -537,10 +620,18 @@ void Robot::Tele_FourBar(void)
             }
         }
 
+
+
         numValues++;
         int potValue = FourBarPot.GetValue();
         sum += potValue;
-        //std::cout << "pot"  << potValue << "\n";
+        /*std::cout << "pot "  << potValue <<  " " 
+        << fourBarSum << " " <<
+        buttonBoard.GetRawAxis(1) << " " <<
+        buttonBoard.GetRawAxis(2) << " " <<
+        buttonBoard.GetRawAxis(0) << " " <<
+        "\n";*/
+        
         //std::cout << FourBarPot.GetValue() << "\n";
         if (numValues > 50)
         {
@@ -623,7 +714,7 @@ void Robot::Tele_FourBar(void)
             double DutyCycleDbl = Kp * (double)fourBarError + Ki * (double)errorIntegral + Kd * (double)errorDerivative;
             //int DutyCycle = floor( abs( DutyCycleDbl ) );
             int DutyCycle = (DutyCycleDbl > 0) ? (std::min(floor(abs(DutyCycleDbl)), 2.0)) : (floor(abs(DutyCycleDbl)));
-
+/*
             std::cout
                 << Index << " "
                 << fourBarSum << " "
@@ -637,7 +728,7 @@ void Robot::Tele_FourBar(void)
                 << Ki * (double)errorIntegral << " "
                 << Kd * (double)errorDerivative << " "
                                                    "\n";
-
+*/
             errorDerivativeSum = 0.0;
             errorSum = 0.0;
             errorIntegralSum = 0.0;

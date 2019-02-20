@@ -68,7 +68,12 @@ class Robot : public frc::TimedRobot {
     // Game Controllers
 	frc::Joystick buttonBoard{1};
     frc::XboxController XboxController{0};
-    // Sensors
+    // Based on leg position
+    frc::DigitalInput rearLimiterBot{ 4 };
+    frc::DigitalInput frontLimiterBot{ 1 };
+    frc::DigitalInput frontLimiterTop{ 0 };
+    frc::DigitalInput rearLimiterTop{  3 };
+
     //frc::ADXRS450_Gyro gyro{ frc::SPI::Port::kOnboardCS0  }; // Right turn -> positive angle
     frc::AnalogInput FourBarPot{0};
     // Auto
