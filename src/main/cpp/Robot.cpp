@@ -11,38 +11,37 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 
-int SumtoPot(int fourBarSum)
+int PositionIndextoPotValue( int fourBarPositionIndex )
 {
-    if (fourBarSum == 0)
+    if (fourBarPositionIndex == 0)
     {
         // ground
         return 1012;
     }
-    else if (fourBarSum == 1)
+    else if (fourBarPositionIndex == 1)
     {
         return 1100;
     }
 
-    else if (fourBarSum == 2)
+    else if (fourBarPositionIndex == 2)
     {
         // cargo level 1
         return 1770;
     }
-    else if (fourBarSum == 3)
+    else if (fourBarPositionIndex == 3)
     {
         // Rocket hatch level 2
         return 2100;
     }
-    else if (fourBarSum == 4)
+    else if (fourBarPositionIndex == 4)
     {
         return 2740;
     }
-    else if (fourBarSum == 5)
+    else if (fourBarPositionIndex == 5)
     {
         //Hatch level 3 / max
         return 3020;
     }
-
     else
     {
         return 1012;
@@ -278,6 +277,8 @@ lift_state_t liftState = Waiting;
 
 void Robot::Tele_Lift(void)
 {
+    bool const debug_manualControl = 0;
+
     bool const yButtonPressed = XboxController.GetYButton(); // up
     bool const bButtonPressed = XboxController.GetBButton(); // tilt
     bool const xButtonPressed = XboxController.GetXButton();
@@ -286,7 +287,7 @@ void Robot::Tele_Lift(void)
     bool const buttonValue9 = buttonBoard.GetRawButton(9);   // down
 
 
-    if (0)
+    if ( debug_manualControl )
     {
         if (yButtonPressed)
         {
@@ -483,301 +484,193 @@ void Robot::Tele_Lift(void)
 
 void Robot::Tele_FourBar(void)
 {
-    if (0)
+    frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
+    bool const buttonValue3 = buttonBoard.GetRawButton(3);
+    bool const buttonValue4 = buttonBoard.GetRawButton(4);
+    double const fourBarShiftButtonValue = buttonBoard.GetRawAxis(1);
+    //double const fourBarShift2 = buttonBoard.GetRawAxis(0);
+
+    const  int    buttonSameValueCountLimit = 2;
+    static bool   handledButtonPress        = false;
+    static int    buttonSameValueCount      = 0;
+    static double lastButtonValue           = 0;
+    static int    fourBarPositionIndex      = 0;
+
+    if ( lastButtonValue == fourBarShiftButtonValue )
     {
-        frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
-
-        static bool lastWasUp = false;
-        const int offCounterUpMax = 5;
-        const int offCounterDownMax = 0;
-        static int offCounter = 0;
-
-        int const buttonCountThreshold = 3;
-        int const numButtons = 4;
-        int static buttonCounts[numButtons] = {0};
-        static bool TurnOffSolenoids = true;
-        bool handleButtonPress[numButtons] = {false};
-        bool handleButtonRelease[numButtons] = {false};
-
-        for (int button = 0; button < numButtons; button++)
+        if ( buttonSameValueCount < buttonSameValueCountLimit )
         {
-            bool const buttonValue = buttonBoard.GetRawButton(button + 1);
-
-            if (buttonValue)
-            {
-                if (buttonCounts[button] <= buttonCountThreshold)
-                {
-                    buttonCounts[button]++;
-                }
-            }
-            else
-            {
-                if (buttonCounts[button] >= buttonCountThreshold)
-                {
-                    handleButtonPress[button] = false;
-                    handleButtonRelease[button] = true;
-                }
-                buttonCounts[button] = 0;
-            }
-
-            if (buttonCounts[button] == buttonCountThreshold)
-            {
-                handleButtonPress[button] = true;
-                handleButtonRelease[button] = false;
-            }
-        }
-
-        if (TurnOffSolenoids == true)
-        {
-            offCounter++;
-
-            if ((lastWasUp && (offCounter > offCounterUpMax)) ||
-                (!lastWasUp && (offCounter > offCounterDownMax)))
-            {
-                std::cout << "off" << offCounter << "\n";
-                leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-                rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-                offCounter = 0;
-                TurnOffSolenoids = false;
-            }
-        }
-
-        if (handleButtonPress[0])
-        {
-            std::cout << "forward\n";
-            leftarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
-            rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-            TurnOffSolenoids = false;
-        }
-        else if (handleButtonPress[1])
-        {
-            std::cout << "reverse\n";
-            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-            rightarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
-            TurnOffSolenoids = false;
-        }
-        else if (handleButtonPress[2])
-        {
-            std::cout << "forward\n";
-            leftarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
-            rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-            TurnOffSolenoids = true;
-            lastWasUp = true;
-        }
-        else if (handleButtonPress[3])
-        {
-            std::cout << "reverse\n";
-            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-            rightarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
-            TurnOffSolenoids = true;
-            lastWasUp = false;
+            buttonSameValueCount += 1;
         }
     }
     else
     {
-        frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
-        bool const buttonValue3 = buttonBoard.GetRawButton(3);
-        bool const buttonValue4 = buttonBoard.GetRawButton(4);
-        double const fourBarShift = buttonBoard.GetRawAxis(1);
-        //double const fourBarShift2 = buttonBoard.GetRawAxis(0);
+        handledButtonPress   = false;
+        buttonSameValueCount = 0;
+        lastButtonValue      = fourBarShiftButtonValue;
+    }
 
-        static int fourBarSum = 0;
-
-        static int numValues = 0;
-        static long sum = 0;
-
-        static int buttonCount = 0;
-        static double lastButtonValue = 0;
-
-        if ((lastButtonValue == fourBarShift) )
+    if ( buttonSameValueCount == buttonSameValueCountLimit )
+    {
+        if ( handledButtonPress == false )
         {
-            if (buttonCount < 10)
+            // Only handle button press once.
+            handledButtonPress = true;
+
+            if ( fourBarShiftButtonValue < -0.5 ) // should be -1, but make sure in case its not exact
             {
-                buttonCount += 1;
+                if ( fourBarPositionIndex < 6 )
+                {
+                    fourBarPositionIndex += 1;
+                }
             }
+            if ( fourBarShiftButtonValue > 0.5 ) // should be 1, but make sure in case its not exact
+            {
+                if ( fourBarPositionIndex > 0 )
+                {
+                    fourBarPositionIndex -= 1;
+                }
+            }
+        }
+    }
+
+    if (0)
+    {
+        std::cout << m_rearLeft.Get() << " "
+                  << m_rearRight.Get() << " "
+                  << m_frontLeft.Get() << " "
+                  << m_frontRight.Get() << " "
+                  << "\n"
+                  << std::flush;
+    }
+
+    int    const potValue = FourBarPot.GetValue();
+    static double lastPotValue = 0;
+    double const errorThreshold = 250;
+    int    const fourBarError = potValue - PositionIndextoPotValue( fourBarPositionIndex );
+    double fourBarDeriv = potValue - lastPotValue;
+
+    static int Index = 0;
+    int const numHistValues = 5;
+    static int PotValueHist[numHistValues] = {0};
+
+    static bool currentSolenoidValuesInit = false;
+    static frc::DoubleSolenoid::Value currentSolenoidValues[numHistValues];
+
+    if (currentSolenoidValuesInit == false)
+    {
+        currentSolenoidValuesInit = true;
+        for (int idx = 0; idx < numHistValues; idx++)
+        {
+            currentSolenoidValues[idx] = frc::DoubleSolenoid::Value::kOff;
+        }
+    }
+
+    static uint32_t DutyCycleHistIndex = 0;
+    const uint32_t DutyCycleHistLen = 5;
+
+    static int64_t errorIntegral = 0;
+    solenoidValue = currentSolenoidValues[Index];
+
+    PotValueHist[Index] = potValue;
+
+    errorIntegral += fourBarError;
+
+    double Kp = 0.006;
+    double Ki = 0.00001;
+    double Kd = 0.01;
+
+    static int LastError = 0;
+
+    int errorDerivative = LastError - fourBarError;
+    static double errorDerivativeSum = 0.0;
+    static double errorSum = 0.0;
+    static double errorIntegralSum = 0.0;
+    static double PositionSum = 0.0;
+
+    errorSum += fourBarError;
+    errorDerivativeSum += errorDerivative;
+    errorIntegralSum += errorIntegral;
+    PositionSum += potValue;
+    LastError = fourBarError;
+
+    if (Index == (numHistValues - 1))
+    {
+        double const errorDerivativeAvg = errorDerivativeSum / numHistValues;
+        double const errorAvg = errorSum / numHistValues;
+        double const errorIntegralAvg = errorIntegralSum / numHistValues;
+        double const PositionAvg = PositionSum / numHistValues;
+
+        frc::DoubleSolenoid::Value dir;
+
+        //double DutyCycleDbl = Kp * (double)errorAvg + Ki * (double)errorIntegralAvg + Kd * (double)errorDerivativeAvg;
+        double const DutyCycleDbl = Kp * (double)fourBarError + Ki * (double)errorIntegral + Kd * (double)errorDerivative;
+        //int DutyCycle = floor( abs( DutyCycleDbl ) );
+        int const DutyCycle = (DutyCycleDbl > 0) ? (std::min(floor(abs(DutyCycleDbl)), 2.0)) : (floor(abs(DutyCycleDbl)));
+/*
+        std::cout
+            << Index << " "
+            << fourBarPositionIndex << " "
+            << solenoidValue << " "
+            << PositionIndextoPotValue(fourBarPositionIndex) << " "
+            << errorIntegralAvg << " "
+            << errorDerivativeAvg << " "
+            << DutyCycleDbl << " "
+            << DutyCycle * ((DutyCycleDbl < 0) ? (-1) : (1)) << " "
+            << Kp * (double)fourBarError << " "
+            << Ki * (double)errorIntegral << " "
+            << Kd * (double)errorDerivative << " "
+                                               "\n";
+*/
+        errorDerivativeSum = 0.0;
+        errorSum = 0.0;
+        errorIntegralSum = 0.0;
+        PositionSum = 0.0;
+
+        if (DutyCycleDbl > 0)
+        {
+            dir = frc::DoubleSolenoid::Value::kReverse;
         }
         else
         {
-            buttonCount = 0;
-            lastButtonValue = fourBarShift;
+            dir = frc::DoubleSolenoid::Value::kForward;
         }
 
-        if (buttonCount == 3)
+        for (int idx = 0; idx < numHistValues; idx++)
         {
-            if (fourBarShift == -1)
+            if (idx < DutyCycle)
             {
-                if (fourBarSum < 6)
-                {
-                    fourBarSum += 1;
-                }
+                currentSolenoidValues[idx] = dir;
             }
-            if (fourBarShift == 1)
-            {
-                if (fourBarSum > 0)
-                {
-                    fourBarSum -= 1;
-                }
-            }
-        }
-
-
-
-        numValues++;
-        int potValue = FourBarPot.GetValue();
-        sum += potValue;
-        /*std::cout << "pot "  << potValue <<  " " 
-        << fourBarSum << " " <<
-        buttonBoard.GetRawAxis(1) << " " <<
-        buttonBoard.GetRawAxis(2) << " " <<
-        buttonBoard.GetRawAxis(0) << " " <<
-        "\n";*/
-        
-        //std::cout << FourBarPot.GetValue() << "\n";
-        if (numValues > 50)
-        {
-            double const avg = (double)sum / (double)numValues;
-            //std::cout << avg << "\n";
-            numValues = 0;
-            sum = 0;
-        }
-
-        if (0)
-        {
-            std::cout << m_rearLeft.Get() << " "
-                      << m_rearRight.Get() << " "
-                      << m_frontLeft.Get() << " "
-                      << m_frontRight.Get() << " "
-                      << "\n"
-                      << std::flush;
-        }
-
-        static double lastPotValue = 0;
-        double const errorThreshold = 250;
-        int fourBarError;
-        fourBarError = potValue - SumtoPot(fourBarSum);
-        double fourBarDeriv = potValue - lastPotValue;
-
-        static int Index = 0;
-        int const numHistValues = 5;
-        static int PotValueHist[numHistValues] = {0};
-
-        static bool currentSolenoidValuesInit = false;
-        static frc::DoubleSolenoid::Value currentSolenoidValues[numHistValues];
-
-        if (currentSolenoidValuesInit == false)
-        {
-            currentSolenoidValuesInit = true;
-            for (int idx = 0; idx < numHistValues; idx++)
+            else
             {
                 currentSolenoidValues[idx] = frc::DoubleSolenoid::Value::kOff;
             }
         }
 
-        static uint32_t DutyCycleHistIndex = 0;
-        const uint32_t DutyCycleHistLen = 5;
-
-        static int64_t errorIntegral = 0;
-        solenoidValue = currentSolenoidValues[Index];
-
-        PotValueHist[Index] = potValue;
-
-        errorIntegral += fourBarError;
-
-        double Kp = 0.006;
-        double Ki = 0.00001;
-        double Kd = 0.01;
-
-        static int LastError = 0;
-
-        int errorDerivative = LastError - fourBarError;
-        static double errorDerivativeSum = 0.0;
-        static double errorSum = 0.0;
-        static double errorIntegralSum = 0.0;
-        static double PositionSum = 0.0;
-
-        errorSum += fourBarError;
-        errorDerivativeSum += errorDerivative;
-        errorIntegralSum += errorIntegral;
-        PositionSum += potValue;
-        LastError = fourBarError;
-
-        if (Index == (numHistValues - 1))
-        {
-            double errorDerivativeAvg = errorDerivativeSum / numHistValues;
-            double errorAvg = errorSum / numHistValues;
-            double errorIntegralAvg = errorIntegralSum / numHistValues;
-            double PositionAvg = PositionSum / numHistValues;
-
-            frc::DoubleSolenoid::Value dir;
-
-            //double DutyCycleDbl = Kp * (double)errorAvg + Ki * (double)errorIntegralAvg + Kd * (double)errorDerivativeAvg;
-            double DutyCycleDbl = Kp * (double)fourBarError + Ki * (double)errorIntegral + Kd * (double)errorDerivative;
-            //int DutyCycle = floor( abs( DutyCycleDbl ) );
-            int DutyCycle = (DutyCycleDbl > 0) ? (std::min(floor(abs(DutyCycleDbl)), 2.0)) : (floor(abs(DutyCycleDbl)));
-/*
-            std::cout
-                << Index << " "
-                << fourBarSum << " "
-                << solenoidValue << " "
-                << SumtoPot(fourBarSum) << " "
-                << errorIntegralAvg << " "
-                << errorDerivativeAvg << " "
-                << DutyCycleDbl << " "
-                << DutyCycle * ((DutyCycleDbl < 0) ? (-1) : (1)) << " "
-                << Kp * (double)fourBarError << " "
-                << Ki * (double)errorIntegral << " "
-                << Kd * (double)errorDerivative << " "
-                                                   "\n";
-*/
-            errorDerivativeSum = 0.0;
-            errorSum = 0.0;
-            errorIntegralSum = 0.0;
-            PositionSum = 0.0;
-
-            if (DutyCycleDbl > 0)
-            {
-                dir = frc::DoubleSolenoid::Value::kReverse;
-            }
-            else
-            {
-                dir = frc::DoubleSolenoid::Value::kForward;
-            }
-
-            for (int idx = 0; idx < numHistValues; idx++)
-            {
-                if (idx < DutyCycle)
-                {
-                    currentSolenoidValues[idx] = dir;
-                }
-                else
-                {
-                    currentSolenoidValues[idx] = frc::DoubleSolenoid::Value::kOff;
-                }
-            }
-
-            Index = 0;
-        }
-        else
-        {
-            Index++;
-        }
-
-        if (solenoidValue == frc::DoubleSolenoid::Value::kForward)
-        {
-            leftarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
-            rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-        }
-        else if (solenoidValue == frc::DoubleSolenoid::Value::kReverse)
-        {
-            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-            rightarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
-        }
-        else
-        {
-            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-            rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-        }
+        Index = 0;
     }
+    else
+    {
+        Index++;
+    }
+
+    if (solenoidValue == frc::DoubleSolenoid::Value::kForward)
+    {
+        leftarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
+        rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+    }
+    else if (solenoidValue == frc::DoubleSolenoid::Value::kReverse)
+    {
+        leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+        rightarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
+    }
+    else
+    {
+        leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+        rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+    }
+
 
     // override with big cylinder
     //if(buttonValue3)
