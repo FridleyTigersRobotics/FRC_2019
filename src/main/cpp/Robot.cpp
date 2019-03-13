@@ -139,12 +139,12 @@ void Robot::TestPeriodic()
 
 void Robot::Hatch_wrist(void)
 {
-    bool const buttonValue2 = buttonBoard.GetRawButton(2);
+    bool const buttonValue2 = buttonBoard.GetRawButton(7);
     const int buttonPressCountLimit1 = 3;
     static int buttonPressCount1 = 0;
     static int wristToggle = 0;
 
-    if (buttonValue2)
+    if (buttonValue7)
     {
         if ( buttonPressCount1 <= buttonPressCountLimit1 )
         {
@@ -184,12 +184,12 @@ void Robot::Hatch_wrist(void)
 
 void Robot::Hatch_piece(void)
 {
-    bool const buttonValue1 = buttonBoard.GetRawButton(1);
+    bool const buttonValue1 = buttonBoard.GetRawButton(8);
     const int buttonPressCountLimit = 3;
     static int buttonPressCount = 0;
     static int pieceToggle = 0;
 
-    if (buttonValue1)
+    if (buttonValue8)
     {
         if ( buttonPressCount <= buttonPressCountLimit )
         {
@@ -232,7 +232,7 @@ void Robot::Ball_intake(void)
     /*frc::XboxController::JoystickHand const inHand  = frc::XboxController::JoystickHand::kRightHand;
     frc::XboxController::JoystickHand const outHand = frc::XboxController::JoystickHand::kLeftHand;
 
-    // Retrieve the stick Y position
+    //Retrieve the stick Y position
     double const inTriggerPosition  = XboxController.GetTriggerAxis( inHand  );
     double const outTriggerPosition = XboxController.GetTriggerAxis( outHand );
 
@@ -244,14 +244,14 @@ void Robot::Ball_intake(void)
     // Calculate the motor speeds for the specified input
     double const m_ballIntake  = inTriggerPositionWithDeadband - outTriggerPositionWithDeadband;*/
     double m_ballIntakeSpeed = 0.15;
-    bool const buttonValue5 = buttonBoard.GetRawButton(5);
-    bool const buttonValue6 = buttonBoard.GetRawButton(6);
+    bool const buttonValue5 = buttonBoard.GetRawButton(9);
+    bool const buttonValue6 = buttonBoard.GetRawButton(10);
 
-    if (buttonValue5)
+    if (buttonValue9)
     {
         m_ballIntakeSpeed = -0.5;
     }
-    else if (buttonValue6)
+    else if (buttonValue10)
     {
         m_ballIntakeSpeed = 0.5;
     }
@@ -285,6 +285,8 @@ void Robot::Tele_Lift(void)
     bool const aButtonPressed = XboxController.GetAButton(); // down
     bool const buttonValue10 = buttonBoard.GetRawButton(10); // down
     bool const buttonValue9 = buttonBoard.GetRawButton(9);   // down
+    double const fourBarShiftButtonValue = buttonBoard.GetRawAxis(1);
+    double const fourBarShift2 = buttonBoard.GetRawAxis(0);
 
 
     if ( debug_manualControl )
@@ -485,8 +487,12 @@ void Robot::Tele_Lift(void)
 void Robot::Tele_FourBar(void)
 {
     frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
+    bool const buttonValue1 = buttonBoard.GetRawButton(1);
+    bool const buttonValue2 = buttonBoard.GetRawButton(2);
     bool const buttonValue3 = buttonBoard.GetRawButton(3);
     bool const buttonValue4 = buttonBoard.GetRawButton(4);
+    bool const buttonValue5 = buttonBoard.GetRawButton(5);
+    bool const buttonValue6 = buttonBoard.GetRawButton(6);
     double const fourBarShiftButtonValue = buttonBoard.GetRawAxis(1);
     //double const fourBarShift2 = buttonBoard.GetRawAxis(0);
 
