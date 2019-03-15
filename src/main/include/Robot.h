@@ -47,6 +47,7 @@ class Robot : public frc::TimedRobot {
   void Tele_Lift(  void  );
   void Tele_FourBar(  void  );
   void Hatch_piece( void );
+  void LoggerUpdate( void );
 
  private:
     // Motors

@@ -120,7 +120,6 @@ void Robot::AutonomousPeriodic()
 
 void Robot::TeleopInit()
 {
-
     time.Start();
 }
 
@@ -133,10 +132,20 @@ void Robot::TeleopPeriodic()
     UpdateDriveSystem();
     Hatch_wrist();
     Hatch_piece();
+    LoggerUpdate();
 }
 
 void Robot::TestPeriodic()
 {
+}
+
+void Robot::LoggerUpdate(void)
+{
+    SmartDashboard::PutNumber("Current level: ", FourBarPot)
+
+
+
+
 }
 
 void Robot::Hatch_wrist(void)
@@ -245,17 +254,17 @@ void Robot::Ball_intake(void)
 
     // Calculate the motor speeds for the specified input
     double const m_ballIntake  = inTriggerPositionWithDeadband - outTriggerPositionWithDeadband;*/
-    double m_ballIntakeSpeed = 0.15;
+    double m_ballIntakeSpeed = -0.15;
     bool const buttonValue9 = buttonBoard.GetRawButton(9);
     bool const buttonValue10 = buttonBoard.GetRawButton(10);
 
     if (buttonValue9)
     {
-        m_ballIntakeSpeed = -0.5;
+        m_ballIntakeSpeed = -0.55;
     }
     else if (buttonValue10)
     {
-        m_ballIntakeSpeed = 0.5;
+        m_ballIntakeSpeed = 0.55;
     }
 
     else
@@ -285,8 +294,6 @@ void Robot::Tele_Lift(void)
     bool const bButtonPressed = XboxController.GetBButton(); // tilt
     bool const xButtonPressed = XboxController.GetXButton();
     bool const aButtonPressed = XboxController.GetAButton(); // down
-    bool const buttonValue10 = buttonBoard.GetRawButton(10); // down
-    bool const buttonValue9 = buttonBoard.GetRawButton(9);   // down
 
     double const liftShiftAxisValue = buttonBoard.GetRawAxis(1);
   
