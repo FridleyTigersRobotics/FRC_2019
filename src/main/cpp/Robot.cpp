@@ -7,7 +7,9 @@
 // https://wpilib.screenstepslive.com/s/currentCS/m/java/l/599704-driving-a-robot-using-mecanum-drive
 #include <Robot.h>
 #include <iostream>
-// test
+// TODO
+// Figure out potentionmeter value
+ 
 
 #include <frc/smartdashboard/SmartDashboard.h>
 
@@ -20,7 +22,7 @@ int PositionIndextoPotValue( int fourBarPositionIndex )
     }
     else if (fourBarPositionIndex == 1)
     {
-        return 1100;
+        return 1150;
     }
 
     else if (fourBarPositionIndex == 2)
@@ -35,7 +37,7 @@ int PositionIndextoPotValue( int fourBarPositionIndex )
     }
     else if (fourBarPositionIndex == 4)
     {
-        return 2740;
+        return 2650;
     }
     else if (fourBarPositionIndex == 5)
     {
@@ -139,7 +141,7 @@ void Robot::TestPeriodic()
 
 void Robot::Hatch_wrist(void)
 {
-    bool const buttonValue2 = buttonBoard.GetRawButton(7);
+    bool const buttonValue7 = buttonBoard.GetRawButton(7);
     const int buttonPressCountLimit1 = 3;
     static int buttonPressCount1 = 0;
     static int wristToggle = 0;
@@ -184,7 +186,7 @@ void Robot::Hatch_wrist(void)
 
 void Robot::Hatch_piece(void)
 {
-    bool const buttonValue1 = buttonBoard.GetRawButton(8);
+    bool const buttonValue8 = buttonBoard.GetRawButton(8);
     const int buttonPressCountLimit = 3;
     static int buttonPressCount = 0;
     static int pieceToggle = 0;
@@ -244,8 +246,8 @@ void Robot::Ball_intake(void)
     // Calculate the motor speeds for the specified input
     double const m_ballIntake  = inTriggerPositionWithDeadband - outTriggerPositionWithDeadband;*/
     double m_ballIntakeSpeed = 0.15;
-    bool const buttonValue5 = buttonBoard.GetRawButton(9);
-    bool const buttonValue6 = buttonBoard.GetRawButton(10);
+    bool const buttonValue9 = buttonBoard.GetRawButton(9);
+    bool const buttonValue10 = buttonBoard.GetRawButton(10);
 
     if (buttonValue9)
     {
@@ -258,7 +260,7 @@ void Robot::Ball_intake(void)
 
     else
     {
-        m_ballIntakeSpeed = -0.2;
+        m_ballIntakeSpeed = -0.25;
     }
     m_ballIntake.Set(m_ballIntakeSpeed);
 }
@@ -285,8 +287,22 @@ void Robot::Tele_Lift(void)
     bool const aButtonPressed = XboxController.GetAButton(); // down
     bool const buttonValue10 = buttonBoard.GetRawButton(10); // down
     bool const buttonValue9 = buttonBoard.GetRawButton(9);   // down
-    double const fourBarShiftButtonValue = buttonBoard.GetRawAxis(1);
-    double const fourBarShift2 = buttonBoard.GetRawAxis(0);
+
+    double const liftShiftAxisValue = buttonBoard.GetRawAxis(1);
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     if ( debug_manualControl )
@@ -334,11 +350,11 @@ void Robot::Tele_Lift(void)
         bool const frontTopLimit = frontLimiterTop.Get(); 
         bool const frontBotLimit = frontLimiterBot.Get(); 
 
-        std::cout << "limits " << rearTopLimit << " " 
+       /* std::cout << "limits " << rearTopLimit << " " 
         << rearBotLimit << " "
         << frontTopLimit << " "
         << frontBotLimit << "\n";
-
+*/
 
 
         // OVerride automated climbing with manual
@@ -348,6 +364,7 @@ void Robot::Tele_Lift(void)
             {
                 if ( frontBotLimit )
                 {
+                    // Bar retracts with negative 
                     m_frontLift.Set(0.8);
                 }
                 else
@@ -359,6 +376,7 @@ void Robot::Tele_Lift(void)
             {
                 if ( frontTopLimit )
                 {
+                    // Bar Extends with positive
                     m_frontLift.Set(-0.8);
                 }
                 else
@@ -401,11 +419,11 @@ void Robot::Tele_Lift(void)
         }
         else
         {
-            if (buttonValue10 || (!rearTopLimit && !frontTopLimit))
+            if ((liftShiftAxisValue > 0.5) || (!rearTopLimit && !frontTopLimit))
             {
                 liftState = TiltForward;
             }
-            else if (buttonValue9)
+            else if (liftShiftAxisValue < -0.5)
             {
                 if(liftState !=TiltForward){
                     liftState = LiftUp;
@@ -493,14 +511,17 @@ void Robot::Tele_FourBar(void)
     bool const buttonValue4 = buttonBoard.GetRawButton(4);
     bool const buttonValue5 = buttonBoard.GetRawButton(5);
     bool const buttonValue6 = buttonBoard.GetRawButton(6);
-    double const fourBarShiftButtonValue = buttonBoard.GetRawAxis(1);
-    //double const fourBarShift2 = buttonBoard.GetRawAxis(0);
+    static int fourBarPositionIndex = 0;
 
+
+
+    std::cout << fourBarPositionIndex;
+/*
     const  int    buttonSameValueCountLimit = 2;
     static bool   handledButtonPress        = false;
     static int    buttonSameValueCount      = 0;
     static double lastButtonValue           = 0;
-    static int    fourBarPositionIndex      = 0;
+    
 
     if ( lastButtonValue == fourBarShiftButtonValue )
     {
@@ -539,6 +560,43 @@ void Robot::Tele_FourBar(void)
             }
         }
     }
+*/
+    if (buttonValue5)
+    {
+        fourBarPositionIndex = 0;
+    }
+    else if (buttonValue6)
+    {
+        fourBarPositionIndex = 1;
+    }
+    else if (buttonValue3)
+    {
+        fourBarPositionIndex = 2;
+    }
+    else if (buttonValue4)
+    {
+        fourBarPositionIndex = 3;
+    }
+    else if (buttonValue1)
+    {
+        fourBarPositionIndex = 4;
+    }
+    else if (buttonValue2)
+    {
+        fourBarPositionIndex = 5;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     if (0)
     {
@@ -552,7 +610,6 @@ void Robot::Tele_FourBar(void)
 
     int    const potValue = FourBarPot.GetValue();
     static double lastPotValue = 0;
-    double const errorThreshold = 250;
     int    const fourBarError = potValue - PositionIndextoPotValue( fourBarPositionIndex );
     double fourBarDeriv = potValue - lastPotValue;
 
@@ -583,7 +640,7 @@ void Robot::Tele_FourBar(void)
     errorIntegral += fourBarError;
 
     double Kp = 0.006;
-    double Ki = 0.00001;
+    double Ki = 0.00000;
     double Kd = 0.01;
 
     static int LastError = 0;
@@ -600,6 +657,10 @@ void Robot::Tele_FourBar(void)
     PositionSum += potValue;
     LastError = fourBarError;
 
+
+
+
+
     if (Index == (numHistValues - 1))
     {
         double const errorDerivativeAvg = errorDerivativeSum / numHistValues;
@@ -607,12 +668,30 @@ void Robot::Tele_FourBar(void)
         double const errorIntegralAvg = errorIntegralSum / numHistValues;
         double const PositionAvg = PositionSum / numHistValues;
 
+
+
         frc::DoubleSolenoid::Value dir;
 
         //double DutyCycleDbl = Kp * (double)errorAvg + Ki * (double)errorIntegralAvg + Kd * (double)errorDerivativeAvg;
         double const DutyCycleDbl = Kp * (double)fourBarError + Ki * (double)errorIntegral + Kd * (double)errorDerivative;
         //int DutyCycle = floor( abs( DutyCycleDbl ) );
-        int const DutyCycle = (DutyCycleDbl > 0) ? (std::min(floor(abs(DutyCycleDbl)), 2.0)) : (floor(abs(DutyCycleDbl)));
+        double const dutAdder = ( fourBarPositionIndex < 2 ) ? 0.5: 0.0;
+        int const DutyCycle = (DutyCycleDbl > 0) ?
+            (std::min(floor(fabs(DutyCycleDbl) + dutAdder), 2.0)) : 
+            (floor(fabs(DutyCycleDbl)+dutAdder));
+
+
+    if (1)
+    {
+        std::cout << fourBarPositionIndex << " "
+                  << DutyCycleDbl << " "
+                  << DutyCycle << " "
+                  << potValue << " "
+                  
+                 << "\n"
+                  << std::flush;
+    }
+
 /*
         std::cout
             << Index << " "
