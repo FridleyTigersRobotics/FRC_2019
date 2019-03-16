@@ -11,43 +11,55 @@
 // Figure out potentionmeter value
  
 
-#include <frc/smartdashboard/SmartDashboard.h>
+//#include <frc/smartdashbard/SmartDashboard.h>
+
+bool gbl_AllowFourBarMovement = true;
 
 int PositionIndextoPotValue( int fourBarPositionIndex )
 {
-    if (fourBarPositionIndex == 0)
+    if ( 1 /*gbl_AllowFourBarMovement == true*/ )
     {
-        // ground
-        return 1012;
-    }
-    else if (fourBarPositionIndex == 1)
-    {
-        return 1150;
-    }
+        if (fourBarPositionIndex == 0)
+        {
+            // ground
+            return 1012;
+        }
+        else if (fourBarPositionIndex == 1)
+        {
+            return 1150;
+        }
 
-    else if (fourBarPositionIndex == 2)
-    {
-        // cargo level 1
-        return 1770;
-    }
-    else if (fourBarPositionIndex == 3)
-    {
-        // Rocket hatch level 2
-        return 2100;
-    }
-    else if (fourBarPositionIndex == 4)
-    {
-        return 2650;
-    }
-    else if (fourBarPositionIndex == 5)
-    {
-        //Hatch level 3 / max
-        return 3020;
+        else if (fourBarPositionIndex == 2)
+        {
+            // cargo level 1
+            return 1770;
+        }
+        else if (fourBarPositionIndex == 3)
+        {
+            // Rocket hatch level 2
+            return 2100;
+        }
+        else if (fourBarPositionIndex == 4)
+        {
+            return 2650;
+        }
+        else if (fourBarPositionIndex == 5)
+        {
+            //Hatch level 3 / max
+            return 3020;
+        }
+        else
+        {
+            return 1012;
+        }
     }
     else
     {
+         std::cout << "lift disabled \n";
+        // If four bar movement is not allowed, go to the lowest level.
         return 1012;
     }
+    
 }
 
 void Robot::RobotInit()
@@ -64,6 +76,7 @@ void Robot::RobotInit()
   actionChooser.AddObject( "3) Cargo", Cargo );
   frc::SmartDashboard::PutData( "Auto Action", &actionChooser);
 */
+    gbl_AllowFourBarMovement = true;
     CameraServer::GetInstance()->StartAutomaticCapture( 0 ); 
     ahrs = new AHRS(SPI::Port::kMXP);
 }
@@ -132,21 +145,22 @@ void Robot::TeleopPeriodic()
     UpdateDriveSystem();
     Hatch_wrist();
     Hatch_piece();
-    LoggerUpdate();
+    //LoggerUpdate();
 }
 
 void Robot::TestPeriodic()
 {
 }
 
-void Robot::LoggerUpdate(void)
+/*
+void Robot::LoggerUpdate(bool wristToggle, bool pieceToggle)
 {
-    SmartDashboard::PutNumber("Current level: ", FourBarPot)
+    //SmartDashboard::PutBoolean("Wrist toggle: ", wristToggle);
+    //SmartDashboard::PutBoolean("Piece toggle: ", pieceToggle);
 
 
 
-
-}
+}*/
 
 void Robot::Hatch_wrist(void)
 {
@@ -179,7 +193,7 @@ void Robot::Hatch_wrist(void)
         buttonPressCount1 = 0;
     }
     
-
+    SmartDashboard::PutBoolean("Wrist toggle: ", wristToggle);
     if ( wristToggle == 1 )
     {
         wristSolenoid.Set(true);
@@ -209,13 +223,13 @@ void Robot::Hatch_piece(void)
 
         if ( buttonPressCount == buttonPressCountLimit )
         {
-            if (pieceToggle == 0)
+            if (pieceToggle == 1)
             {
-                pieceToggle = 1;
+                pieceToggle = 0;
             }
             else
             { 
-                pieceToggle = 0;
+                pieceToggle = 1;
             }
         }
     }
@@ -224,7 +238,7 @@ void Robot::Hatch_piece(void)
         buttonPressCount = 0;
     }
     
-
+    SmartDashboard::PutBoolean("Piece toggle: ", pieceToggle);
     if ( pieceToggle == 1 )
     {
         pieceSolenoid.Set(false);
@@ -260,7 +274,7 @@ void Robot::Ball_intake(void)
 
     if (buttonValue9)
     {
-        m_ballIntakeSpeed = -0.55;
+        m_ballIntakeSpeed = -0.7;
     }
     else if (buttonValue10)
     {
@@ -269,7 +283,7 @@ void Robot::Ball_intake(void)
 
     else
     {
-        m_ballIntakeSpeed = -0.25;
+        m_ballIntakeSpeed = -0.35;
     }
     m_ballIntake.Set(m_ballIntakeSpeed);
 }
@@ -285,6 +299,9 @@ typedef enum
 } lift_state_t;
 
 lift_state_t liftState = Waiting;
+
+
+
 
 void Robot::Tele_Lift(void)
 {
@@ -357,12 +374,24 @@ void Robot::Tele_Lift(void)
         bool const frontTopLimit = frontLimiterTop.Get(); 
         bool const frontBotLimit = frontLimiterBot.Get(); 
 
-       /* std::cout << "limits " << rearTopLimit << " " 
+if ( 0 )
+{
+        std::cout << "limits " << rearTopLimit << " " 
         << rearBotLimit << " "
         << frontTopLimit << " "
         << frontBotLimit << "\n";
-*/
 
+
+        std::cout << "buttons " << yButtonPressed << " " 
+        << xButtonPressed << " "
+        << aButtonPressed << " "
+        << bButtonPressed << "\n";
+}
+
+        if (!rearTopLimit && !frontTopLimit)
+        {
+            gbl_AllowFourBarMovement = false;
+        }
 
         // OVerride automated climbing with manual
         if ( yButtonPressed || xButtonPressed || aButtonPressed || bButtonPressed ) 
@@ -426,7 +455,7 @@ void Robot::Tele_Lift(void)
         }
         else
         {
-            if ((liftShiftAxisValue > 0.5) || (!rearTopLimit && !frontTopLimit))
+            if ((liftShiftAxisValue > 0.5) || (!rearTopLimit /*&& !frontTopLimit*/))
             {
                 liftState = TiltForward;
             }
@@ -509,6 +538,18 @@ void Robot::Tele_Lift(void)
     }
 }
 
+
+char const * FourBarDict[] = \
+{
+    "Ground",
+    "Hatch Lvl 1",
+    "Cargo Lvl 1",
+    "Hatch Lvl 2",    
+    "Cargo Lvl 2",
+    "Hatch Lvl 3"    
+};
+
+
 void Robot::Tele_FourBar(void)
 {
     frc::DoubleSolenoid::Value solenoidValue = frc::DoubleSolenoid::Value::kOff;
@@ -521,8 +562,8 @@ void Robot::Tele_FourBar(void)
     static int fourBarPositionIndex = 0;
 
 
-
-    std::cout << fourBarPositionIndex;
+    //std::cout << c->GetPressureS;
+    //std::cout << fourBarPositionIndex;
 /*
     const  int    buttonSameValueCountLimit = 2;
     static bool   handledButtonPress        = false;
@@ -596,7 +637,7 @@ void Robot::Tele_FourBar(void)
 
 
 
-
+    SmartDashboard::PutString("Current Level Dict: ", FourBarDict[fourBarPositionIndex] );
 
 
 
@@ -688,16 +729,16 @@ void Robot::Tele_FourBar(void)
             (floor(fabs(DutyCycleDbl)+dutAdder));
 
 
-    if (1)
-    {
-        std::cout << fourBarPositionIndex << " "
-                  << DutyCycleDbl << " "
-                  << DutyCycle << " "
-                  << potValue << " "
-                  
-                 << "\n"
-                  << std::flush;
-    }
+        if (0)
+        {
+            std::cout << fourBarPositionIndex << " "
+                    << DutyCycleDbl << " "
+                    << DutyCycle << " "
+                    << potValue << " "
+                    
+                    << "\n"
+                    << std::flush;
+        }
 
 /*
         std::cout
@@ -747,22 +788,44 @@ void Robot::Tele_FourBar(void)
         Index++;
     }
 
-    if (solenoidValue == frc::DoubleSolenoid::Value::kForward)
+    if ( 1 )
     {
-        leftarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
-        rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-    }
-    else if (solenoidValue == frc::DoubleSolenoid::Value::kReverse)
-    {
-        leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-        rightarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
+        if (solenoidValue == frc::DoubleSolenoid::Value::kForward)
+        {
+            leftarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
+            rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+        }
+        else if (solenoidValue == frc::DoubleSolenoid::Value::kReverse)
+        {
+            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+            rightarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
+        }
+        else
+        {
+            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+            rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+        }
     }
     else
     {
-        leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-        rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
-    }
 
+            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+            rightarmDouble.Set(frc::DoubleSolenoid::Value::kForward);
+
+
+        /*if (  )
+        {
+            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+            rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+        }
+        else
+        {
+            leftarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);
+            rightarmDouble.Set(frc::DoubleSolenoid::Value::kReverse);   
+        }*/
+
+
+    }
 
     // override with big cylinder
     //if(buttonValue3)
@@ -785,6 +848,24 @@ void Robot::Tele_FourBar(void)
 
 void Robot::UpdateDriveSystem(void)
 {
+// Dpad up = 0 right = 90
+
+
+
+
+    frc::XboxController::JoystickHand const outHand = frc::XboxController::JoystickHand::kLeftHand;
+
+    //Retrieve the stick Y position
+    double const outTriggerPosition = XboxController.GetTriggerAxis( outHand );
+
+    // Apply deadband
+    double const deadbandEnd       = 0.22;
+    double const outTriggerPositionWithDeadband = deadband( outTriggerPosition, deadbandEnd );
+
+
+
+
+
     frc::XboxController::JoystickHand const driveStickHand = frc::XboxController::JoystickHand::kLeftHand;
     frc::XboxController::JoystickHand const turnStickHand = frc::XboxController::JoystickHand::kRightHand;
 
@@ -792,9 +873,13 @@ void Robot::UpdateDriveSystem(void)
     double const DriveHandX = XboxController.GetY(driveStickHand);
     double const TurnHandX = XboxController.GetX(turnStickHand);
     double const deadbandSize = 0.2;
-    double const xSpeed = -deadband(DriveHandX, deadbandSize);
-    double const ySpeed = deadband(DriveHandY, deadbandSize);
+    double const xSpeed = (outTriggerPositionWithDeadband < 0.2) ? (-deadband(DriveHandX, deadbandSize)) : (outTriggerPositionWithDeadband * 0.5) ;
+    double const ySpeed = deadband(DriveHandY, deadbandSize); 
     double const turnSpeed = deadband(TurnHandX, deadbandSize);
+
+     //ySpeed = outTriggerPositionWithDeadband;
+
+
 
     m_drive.DriveCartesian(xSpeed, ySpeed, turnSpeed);
 }

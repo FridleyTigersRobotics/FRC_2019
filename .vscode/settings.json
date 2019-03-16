@@ -76,6 +76,9 @@
     "cwctype": "cpp",
     "deque": "cpp",
     "fstream": "cpp",
-    "sstream": "cpp"
+    "sstream": "cpp",
+    "bitset": "cpp",
+    "iomanip": "cpp",
+    "numeric": "cpp"
   }
 }

@@ -47,7 +47,6 @@ class Robot : public frc::TimedRobot {
   void Tele_Lift(  void  );
   void Tele_FourBar(  void  );
   void Hatch_piece( void );
-  void LoggerUpdate( void );
 
  private:
     // Motors
@@ -83,6 +82,7 @@ class Robot : public frc::TimedRobot {
     const std::string kAutoNameCustom = "My Auto";
     std::string m_autoSelected;
     AHRS *ahrs;
+    Compressor *c = new Compressor( 0 );
     
     frc::Timer time{};
 };
